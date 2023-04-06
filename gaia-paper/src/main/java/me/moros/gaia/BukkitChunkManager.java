@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import me.moros.gaia.api.GaiaChunk;
+import org.bukkit.Location;
 
 final class BukkitChunkManager extends SimpleChunkManager {
   private final Gaia bukkitPlugin;
@@ -34,12 +35,21 @@ final class BukkitChunkManager extends SimpleChunkManager {
 
   @Override
   public CompletableFuture<?> asyncLoad(GaiaChunk chunk) {
-    return BukkitAdapter.adapt(chunk.parent().world()).getChunkAtAsync(chunk.x(), chunk.z())
-      .thenApply(c -> c.addPluginChunkTicket(bukkitPlugin));
+    var future = new CompletableFuture<>();
+    scheduleWithRegionContext(chunk, () -> BukkitAdapter.adapt(chunk.parent().world()).getChunkAtAsync(chunk.x(), chunk.z())
+      .thenAccept(c -> c.addPluginChunkTicket(bukkitPlugin)).thenAccept(future::complete)
+    );
+    return future;
   }
 
   @Override
   public void onChunkOperationComplete(GaiaChunk chunk) {
-    BukkitAdapter.adapt(chunk.parent().world()).removePluginChunkTicket(chunk.x(), chunk.z(), bukkitPlugin);
+    scheduleWithRegionContext(chunk, () -> BukkitAdapter.adapt(chunk.parent().world()).removePluginChunkTicket(chunk.x(), chunk.z(), bukkitPlugin));
+  }
+
+  private void scheduleWithRegionContext(GaiaChunk chunk, Runnable task) {
+    var w = BukkitAdapter.adapt(chunk.parent().world());
+    var loc = new Location(w, chunk.x() << 4, 0, chunk.z() << 4);
+    bukkitPlugin.getServer().getRegionScheduler().execute(bukkitPlugin, loc, task);
   }
 }

@@ -90,7 +90,7 @@ public class Gaia extends JavaPlugin implements GaiaPlugin {
 
     if (!GaiaIO.createInstance(this, getDataFolder().getPath())) {
       logger.error("Could not create Arenas folder! Aborting plugin load.");
-      setEnabled(false);
+      getServer().getPluginManager().disablePlugin(this);
       return;
     }
     long startTime = System.currentTimeMillis();
@@ -257,6 +257,6 @@ public class Gaia extends JavaPlugin implements GaiaPlugin {
 
   @Override
   public void repeat(Runnable task, long delay, long period) {
-    getServer().getScheduler().runTaskTimer(this, task, delay, period);
+    getServer().getGlobalRegionScheduler().runAtFixedRate(this, c -> task.run(), delay, period);
   }
 }

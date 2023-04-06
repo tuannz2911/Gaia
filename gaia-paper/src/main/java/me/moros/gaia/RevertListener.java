@@ -56,10 +56,6 @@ public class RevertListener {
   }
 
   private void handleRevert(UUID world, Collection<GaiaChunkPos> chunks) {
-    if (plugin.getServer().isPrimaryThread()) {
-      fixer.accept(world, chunks);
-    } else {
-      plugin.getServer().getScheduler().runTask(plugin, () -> fixer.accept(world, chunks));
-    }
+    fixer.accept(world, chunks);
   }
 }

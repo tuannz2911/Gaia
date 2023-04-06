@@ -7,7 +7,7 @@ dependencies {
     implementation(libs.configurate.hocon)
     implementation(libs.cloud.paper)
     implementation(libs.cloud.minecraft) { isTransitive = false }
-    compileOnly(libs.paper)
+    compileOnly(libs.folia)
     compileOnly(libs.worldedit.bukkit)
 }
 

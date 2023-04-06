@@ -20,6 +20,7 @@
 package me.moros.gaia;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.WorldEdit;
@@ -53,7 +54,7 @@ public class BukkitArenaManager extends ArenaManager {
     long startTime = System.currentTimeMillis();
     arena.reverting(true);
     arena.forEach(gcr -> plugin.chunkManager().revert(gcr, arena.world()));
-    Bukkit.getScheduler().runTaskTimerAsynchronously((Plugin) plugin, task -> {
+    Bukkit.getAsyncScheduler().runAtFixedRate((Plugin) plugin, task -> {
       if (!arena.reverting()) {
         final long deltaTime = System.currentTimeMillis() - startTime;
         Message.CANCEL_SUCCESS.send(user, arena.displayName());
@@ -68,7 +69,7 @@ public class BukkitArenaManager extends ArenaManager {
           WorldEdit.getInstance().getEventBus().post(new ArenaRevertEvent(arena, deltaTime));
         }
       }
-    }, 1, 1);
+    }, 50, 50, TimeUnit.MILLISECONDS);
   }
 
   @Override
@@ -124,7 +125,7 @@ public class BukkitArenaManager extends ArenaManager {
     }
     arena.metadata(new ArenaMetadata(arena));
     final long timeoutMoment = startTime + plugin.configManager().config().timeout();
-    Bukkit.getScheduler().runTaskTimer((Plugin) plugin, task -> {
+    Bukkit.getAsyncScheduler().runAtFixedRate((Plugin) plugin, task -> {
       final long time = System.currentTimeMillis();
       if (time > timeoutMoment) {
         arena.forEach(plugin.chunkManager()::cancel);
@@ -145,7 +146,7 @@ public class BukkitArenaManager extends ArenaManager {
           task.cancel();
         }
       }
-    }, 1, 1);
+    }, 50, 50, TimeUnit.MILLISECONDS);
     add(arena);
     return true;
   }

@@ -46,7 +46,7 @@ public abstract class SimpleChunkManager implements ChunkManager {
     limits = setupLimits();
     this.plugin.configManager().subscribe(n -> updatedConfig.set(true));
     queue = new ConcurrentLinkedQueue<>();
-    plugin.repeat(this::processTasks, 0, 1);
+    plugin.executor().sync().repeat(this::processTasks, 1, 1);
   }
 
   private Limits setupLimits() {

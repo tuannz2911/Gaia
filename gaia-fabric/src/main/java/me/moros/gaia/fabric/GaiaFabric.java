@@ -17,86 +17,84 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia;
+package me.moros.gaia.fabric;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
+import cloud.commandframework.CommandManager;
 import cloud.commandframework.execution.CommandExecutionCoordinator;
-import cloud.commandframework.paper.PaperCommandManager;
+import cloud.commandframework.fabric.FabricServerCommandManager;
 import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.entity.Player;
 import com.sk89q.worldedit.extension.input.InputParseException;
 import com.sk89q.worldedit.extension.input.ParserContext;
+import com.sk89q.worldedit.fabric.FabricAdapter;
+import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldedit.world.block.BlockState;
+import me.moros.gaia.ArenaManager;
+import me.moros.gaia.ChunkManager;
+import me.moros.gaia.GaiaPlugin;
 import me.moros.gaia.api.ArenaPoint;
 import me.moros.gaia.api.GaiaUser;
 import me.moros.gaia.command.Commander;
 import me.moros.gaia.config.ConfigManager;
 import me.moros.gaia.io.GaiaIO;
 import me.moros.gaia.locale.TranslationManager;
-import me.moros.tasker.bukkit.BukkitExecutor;
 import me.moros.tasker.executor.CompositeExecutor;
 import me.moros.tasker.executor.SimpleAsyncExecutor;
+import me.moros.tasker.fabric.FabricExecutor;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.metadata.Person;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.key.Key;
-import org.bstats.bukkit.Metrics;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Entity;
-import org.bukkit.plugin.java.JavaPlugin;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Blocks;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class Gaia extends JavaPlugin implements GaiaPlugin {
-  private BlockState AIR;
+public class GaiaFabric implements GaiaPlugin {
+  private final ModContainer container;
+  private final Logger logger;
 
-  private CompositeExecutor executor;
-  private ParserContext parserContext;
-  private ConfigManager configManager;
-  private Commander commander;
-  private TranslationManager translationManager;
-  private ArenaManager arenaManager;
-  private ChunkManager chunkManager;
-  private String author;
-  private String version;
-  private Logger logger;
+  private final BlockState AIR;
+  private final CompositeExecutor executor;
+  private final ParserContext parserContext;
+  private final ConfigManager configManager;
+  private final Commander commander;
+  private final TranslationManager translationManager;
+  private final ArenaManager arenaManager;
+  private final ChunkManager chunkManager;
+  private MinecraftServer server;
 
-  @Override
-  public void onEnable() {
-    new Metrics(this, 8608);
-    logger = getSLF4JLogger();
-    version = getDescription().getVersion();
-    author = getDescription().getAuthors().get(0);
-
-    Path dir = getDataFolder().toPath();
-    configManager = new ConfigManager(logger, dir);
+  GaiaFabric(ModContainer container, Path path) {
+    this.container = container;
+    this.logger = LoggerFactory.getLogger(container.getMetadata().getName());
+    configManager = new ConfigManager(logger, path);
 
     int threads = Math.max(8, 2 * configManager.config().concurrentChunks());
     var pool = Executors.newScheduledThreadPool(threads);
-    executor = CompositeExecutor.of(new BukkitExecutor(this), new SimpleAsyncExecutor(pool));
+    executor = CompositeExecutor.of(new FabricExecutor(), new SimpleAsyncExecutor(pool));
     parserContext = new ParserContext();
     parserContext.setRestricted(false);
     parserContext.setTryLegacy(false);
     parserContext.setPreferringWildcard(false);
-    AIR = BukkitAdapter.adapt(Material.AIR.createBlockData());
+    AIR = FabricAdapter.adapt(Blocks.AIR.defaultBlockState());
 
-    translationManager = new TranslationManager(logger, dir);
+    translationManager = new TranslationManager(logger, path);
 
-    loadLightFixer(this);
     arenaManager = new ArenaManager(this);
-    chunkManager = new BukkitChunkManager(this);
+    chunkManager = new FabricChunkManager(this);
 
-    if (!GaiaIO.createInstance(this, dir)) {
-      logger.error("Could not create Arenas folder! Aborting plugin load.");
-      setEnabled(false);
-      return;
+    if (!GaiaIO.createInstance(this, path)) {
+      throw new RuntimeException("Could not create Arenas folder! Aborting mod load.");
     }
     long startTime = System.currentTimeMillis();
     GaiaIO.instance().loadAllArenas().thenRun(() -> {
@@ -104,59 +102,41 @@ public class Gaia extends JavaPlugin implements GaiaPlugin {
       int size = arenaManager.size();
       logger.info("Successfully loaded " + size + (size == 1 ? " arena" : " arenas") + " (" + delta + "ms)");
     });
-    try {
-      PaperCommandManager<GaiaUser> manager = new PaperCommandManager<>(this,
-        CommandExecutionCoordinator.simpleCoordinator(),
-        c -> new BukkitGaiaUser(this, c),
-        u -> ((BukkitGaiaUser) u).sender()
-      );
-      manager.registerAsynchronousCompletions();
-      commander = Commander.create(manager, this);
-    } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-    }
+
+    registerLifecycleListeners();
+    CommandManager<GaiaUser> manager = new FabricServerCommandManager<>(
+      CommandExecutionCoordinator.simpleCoordinator(),
+      s -> FabricGaiaUser.from(this, s), s -> ((FabricGaiaUser) s).stack()
+    );
+    commander = Commander.create(manager, this);
     configManager.save();
   }
 
-  @Override
-  public void onDisable() {
+  private void registerLifecycleListeners() {
+    ServerLifecycleEvents.SERVER_STARTED.register(this::onEnable);
+    ServerLifecycleEvents.SERVER_STOPPING.register(this::onDisable);
+  }
+
+  private void onEnable(MinecraftServer server) {
+    this.server = server;
+  }
+
+  private void onDisable(MinecraftServer server) {
     executor.shutdown();
-    getServer().getScheduler().cancelTasks(this);
     if (chunkManager != null) {
       chunkManager.shutdown();
     }
-  }
-
-  private void loadLightFixer(Gaia plugin) {
-    String fullName = plugin.getServer().getClass().getPackageName();
-    String nmsVersion = fullName.substring(1 + fullName.lastIndexOf("."));
-    String className = "me.moros.gaia.nms." + nmsVersion + ".LightFixerImpl";
-    try {
-      Class<?> cls = Class.forName(className);
-      if (!cls.isSynthetic() && LightFixer.class.isAssignableFrom(cls)) {
-        new RevertListener(this, (LightFixer) cls.getDeclaredConstructor().newInstance());
-      }
-    } catch (Exception ignore) {
-      String s = String.format("""
-
-        ****************************************************************
-        * Unable to find native module for version %s.
-        * Chunk relighting will not be available during this session.
-        ****************************************************************
-
-        """, nmsVersion);
-      plugin.logger().warn(s);
-    }
+    this.server = null;
   }
 
   @Override
   public String author() {
-    return author;
+    return container.getMetadata().getVersion().getFriendlyString();
   }
 
   @Override
   public String version() {
-    return version;
+    return container.getMetadata().getAuthors().stream().map(Person::getName).findFirst().orElse("Moros");
   }
 
   @Override
@@ -196,32 +176,41 @@ public class Gaia extends JavaPlugin implements GaiaPlugin {
     return AIR;
   }
 
+  public @Nullable ServerLevel adapt(Key worldKey) {
+    for (ServerLevel level : server.getAllLevels()) {
+      if (worldKey.equals(level.dimension().location())) {
+        return level;
+      }
+    }
+    return null;
+  }
+
   @Override
   public @Nullable World findWorld(Key worldKey) {
-    final org.bukkit.World world = Bukkit.getWorld(new NamespacedKey(worldKey.namespace(), worldKey.value()));
+    ServerLevel world = adapt(worldKey);
     if (world == null) {
       logger.warn("Couldn't find world with key " + worldKey);
       return null;
     }
-    return BukkitAdapter.adapt(world);
+    return FabricAdapter.adapt(world);
   }
 
   @Override
   public @Nullable GaiaUser findUser(String input) {
-    var player = getServer().getPlayer(input);
+    var player = server.getPlayerList().getPlayerByName(input);
     if (player == null) {
       try {
         UUID uuid = UUID.fromString(input);
-        player = getServer().getPlayer(uuid);
+        player = server.getPlayerList().getPlayer(uuid);
       } catch (Exception ignore) {
       }
     }
-    return player == null ? null : new BukkitGaiaUser(this, player);
+    return player == null ? null : FabricGaiaUser.from(this, player.createCommandSourceStack());
   }
 
   @Override
   public Stream<String> users() {
-    return getServer().getOnlinePlayers().stream().map(Entity::getName);
+    return Arrays.stream(server.getPlayerList().getPlayerNamesArray());
   }
 
   @Override
@@ -240,21 +229,18 @@ public class Gaia extends JavaPlugin implements GaiaPlugin {
 
   @Override
   public void teleport(GaiaUser user, Key worldKey, ArenaPoint point) {
-    final org.bukkit.World world = Bukkit.getWorld(new NamespacedKey(worldKey.namespace(), worldKey.value()));
+    var world = adapt(worldKey);
     if (!user.isPlayer() || world == null) {
       return;
     }
-    Location loc = BukkitAdapter.adapt(world, point.v());
-    loc.setYaw(point.yaw());
-    loc.setPitch(point.pitch());
-    BukkitAdapter.adapt(adapt(user)).teleportAsync(loc);
+    adapt(user).setLocation(new Location(FabricAdapter.adapt(world), point.v(), point.yaw(), point.pitch()));
   }
 
   @Override
   public Player adapt(GaiaUser user) {
     return user.pointers().get(Identity.UUID)
-      .map(getServer()::getPlayer)
-      .map(BukkitAdapter::adapt)
+      .map(server.getPlayerList()::getPlayer)
+      .map(FabricAdapter::adaptPlayer)
       .orElseThrow(() -> new IllegalArgumentException("User is not a valid player!"));
   }
 }

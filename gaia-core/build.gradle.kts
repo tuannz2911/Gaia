@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     testImplementation(libs.bundles.junit)
+    compileOnly(libs.tasker.core)
     compileOnly(libs.configurate.hocon)
     compileOnly(libs.slf4j.api)
     compileOnly(libs.gson)

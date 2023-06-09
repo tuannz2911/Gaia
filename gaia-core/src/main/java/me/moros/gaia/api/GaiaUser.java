@@ -19,18 +19,18 @@
 
 package me.moros.gaia.api;
 
-import java.util.UUID;
-
+import com.sk89q.worldedit.math.Vector3;
 import me.moros.gaia.GaiaPlugin;
 import net.kyori.adventure.audience.ForwardingAudience;
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface GaiaUser extends ForwardingAudience.Single {
   GaiaPlugin parent();
 
-  @Nullable UUID worldUUID();
+  @Nullable Key worldKey();
 
   boolean isPlayer();
 
-  boolean hasPermission(String permission);
+  @Nullable Vector3 position();
 }

@@ -17,23 +17,15 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.command;
+package me.moros.gaia.fabric.mixin.accessor;
 
-import cloud.commandframework.Command.Builder;
-import cloud.commandframework.CommandManager;
-import me.moros.gaia.GaiaPlugin;
-import me.moros.gaia.api.GaiaUser;
+import net.minecraft.commands.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-public interface Commander {
-  GaiaPlugin plugin();
-
-  CommandManager<GaiaUser> manager();
-
-  Builder<GaiaUser> rootBuilder();
-
-  void register(Builder<GaiaUser> builder);
-
-  static Commander create(CommandManager<GaiaUser> manager, GaiaPlugin plugin) {
-    return new CommanderImpl(manager, plugin).init();
-  }
+@Mixin(CommandSourceStack.class)
+public interface CommandSourceStackAccess {
+  @Accessor("source")
+  CommandSource source();
 }

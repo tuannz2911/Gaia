@@ -21,7 +21,6 @@ package me.moros.gaia;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.util.eventbus.Subscribe;
@@ -30,12 +29,13 @@ import me.moros.gaia.api.GaiaChunkPos;
 import me.moros.gaia.event.ArenaRevertEvent;
 import me.moros.gaia.event.ChunkRevertEvent;
 import me.moros.gaia.util.Util;
+import net.kyori.adventure.key.Key;
 
 public class RevertListener {
-  private final Gaia plugin;
+  private final GaiaPlugin plugin;
   private final LightFixer fixer;
 
-  RevertListener(Gaia plugin, LightFixer fixer) {
+  public RevertListener(GaiaPlugin plugin, LightFixer fixer) {
     this.plugin = plugin;
     this.fixer = fixer;
     WorldEdit.getInstance().getEventBus().register(this);
@@ -44,22 +44,18 @@ public class RevertListener {
   @Subscribe
   public void onArenaRevert(ArenaRevertEvent event) {
     if (plugin.configManager().config().lightFixer() == Mode.POST_ARENA) {
-      handleRevert(event.arena().worldUID(), Util.spiralChunks(event.arena().region()));
+      handleRevert(event.arena().worldKey(), Util.spiralChunks(event.arena().region()));
     }
   }
 
   @Subscribe
   public void onChunkRevert(ChunkRevertEvent event) {
     if (plugin.configManager().config().lightFixer() == Mode.POST_CHUNK) {
-      handleRevert(event.chunk().parent().worldUID(), List.of(event.chunk()));
+      handleRevert(event.chunk().parent().worldKey(), List.of(event.chunk()));
     }
   }
 
-  private void handleRevert(UUID world, Collection<GaiaChunkPos> chunks) {
-    if (plugin.getServer().isPrimaryThread()) {
-      fixer.accept(world, chunks);
-    } else {
-      plugin.getServer().getScheduler().runTask(plugin, () -> fixer.accept(world, chunks));
-    }
+  private void handleRevert(Key world, Collection<GaiaChunkPos> chunks) {
+    plugin.executor().sync().submit(() -> fixer.accept(world, chunks));
   }
 }

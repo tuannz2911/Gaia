@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Moros
+ * Copyright 2020-2023 Moros
  *
  * This file is part of Gaia.
  *
@@ -38,6 +38,7 @@ import me.moros.gaia.command.argument.ArenaArgument;
 import me.moros.gaia.command.argument.GaiaUserArgument;
 import me.moros.gaia.locale.Message;
 import me.moros.gaia.util.Util;
+import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.TextComponent;
@@ -175,7 +176,7 @@ public record ArenaCommand(Commander commander) implements GaiaCommand {
   }
 
   private void onRevert(GaiaUser user, Arena arena) {
-    if (user.isPlayer() && !user.hasPermission(CommandPermissions.BYPASS.toString())) {
+    if (user.isPlayer() && !hasBypass(user)) {
       long deltaTime = commander().plugin().arenaManager().nextRevertTime(arena) - System.currentTimeMillis();
       if (deltaTime > 0) {
         Message.REVERT_COOLDOWN.send(user, deltaTime);
@@ -193,6 +194,10 @@ public record ArenaCommand(Commander commander) implements GaiaCommand {
     Message.REVERT_SUCCESS.send(user, arena.displayName());
     arena.resetLastReverted();
     commander().plugin().arenaManager().revert(user, arena);
+  }
+
+  private boolean hasBypass(GaiaUser user) {
+    return user.get(PermissionChecker.POINTER).map(c -> c.test(CommandPermissions.BYPASS.toString())).orElse(false);
   }
 
   private void onCancel(GaiaUser user, Arena arena) {

@@ -26,23 +26,37 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sk89q.worldedit.IncompleteRegionException;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.entity.Player;
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector3;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.world.World;
 import me.moros.gaia.api.Arena;
 import me.moros.gaia.api.GaiaChunk;
 import me.moros.gaia.api.GaiaRegion;
 import me.moros.gaia.api.GaiaUser;
+import me.moros.gaia.event.ArenaAnalyzeEvent;
+import me.moros.gaia.event.ArenaRevertEvent;
 import me.moros.gaia.io.GaiaIO;
+import me.moros.gaia.locale.Message;
+import me.moros.gaia.util.metadata.ArenaMetadata;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public abstract class ArenaManager implements Iterable<Arena> {
+public class ArenaManager implements Iterable<Arena> {
   private final Map<String, Arena> arenas = new ConcurrentHashMap<>();
 
   protected final GaiaPlugin plugin;
 
-  protected ArenaManager(GaiaPlugin plugin) {
+  public ArenaManager(GaiaPlugin plugin) {
     this.plugin = plugin;
   }
 
@@ -83,13 +97,118 @@ public abstract class ArenaManager implements Iterable<Arena> {
     arena.forEach(GaiaChunk::cancelReverting);
   }
 
-  public abstract void revert(GaiaUser user, Arena arena);
+  public void revert(Audience user, Arena arena) {
+    long startTime = System.currentTimeMillis();
+    arena.reverting(true);
+    arena.forEach(gcr -> plugin.chunkManager().revert(gcr, arena.world()));
+    plugin.executor().sync().repeat(task -> {
+      if (!arena.reverting()) {
+        final long deltaTime = System.currentTimeMillis() - startTime;
+        Message.CANCEL_SUCCESS.send(user, arena.displayName());
+        task.cancel();
+        WorldEdit.getInstance().getEventBus().post(new ArenaRevertEvent(arena, deltaTime, true));
+      } else {
+        if (arena.stream().noneMatch(GaiaChunk::reverting)) {
+          final long deltaTime = System.currentTimeMillis() - startTime;
+          Message.FINISHED_REVERT.send(user, arena.displayName(), deltaTime);
+          arena.reverting(false);
+          task.cancel();
+          WorldEdit.getInstance().getEventBus().post(new ArenaRevertEvent(arena, deltaTime));
+        }
+      }
+    }, 1, 1);
+  }
 
-  public abstract boolean create(GaiaUser user, String arenaName);
+  public boolean create(GaiaUser user, String arenaName) {
+    Player player = plugin.adapt(user);
+    Key worldId = user.worldKey();
+    if (player == null || worldId == null) {
+      return false;
+    }
+    final Region r;
+    final World world = player.getWorld();
+    try {
+      r = WorldEdit.getInstance().getSessionManager().get(player).getSelection(world);
+    } catch (IncompleteRegionException e) {
+      Message.CREATE_ERROR_SELECTION.send(user);
+      return false;
+    }
 
-  public abstract long nextRevertTime(Arena arena);
+    if (!(r instanceof CuboidRegion)) {
+      Message.CREATE_ERROR_CUBOID.send(user);
+      return false;
+    }
+    int radius = Math.max(Math.max(r.getLength(), r.getWidth()), Math.max(r.getHeight(), 64));
+    if (radius > 1024) { // For safety reasons limit to maximum 64 chunks in any direction
+      Message.CREATE_ERROR_SIZE.send(user);
+      return false;
+    }
+    if (r.getCenter().distanceSq(player.getLocation().toVector()) > radius * radius) {
+      Message.CREATE_ERROR_DISTANCE.send(user);
+      return false;
+    }
 
-  public abstract @Nullable Arena standingArena(GaiaUser user);
+    final BlockVector3 min = BlockVector3.at(r.getMinimumPoint().getX(), r.getMinimumPoint().getY(), r.getMinimumPoint().getZ());
+    final BlockVector3 max = BlockVector3.at(r.getMaximumPoint().getX(), r.getMaximumPoint().getY(), r.getMaximumPoint().getZ());
+    final GaiaRegion gr = new GaiaRegion(min, max);
+
+    if (stream().filter(a -> a.worldKey().equals(worldId)).map(Arena::region).anyMatch(gr::intersects)) {
+      Message.CREATE_ERROR_INTERSECTION.send(user);
+      return false;
+    }
+    final Arena arena = new Arena(arenaName, world, worldId, gr);
+    if (!GaiaIO.instance().createArenaFiles(arenaName)) {
+      Message.CREATE_ERROR_CRITICAL.send(user);
+      return false;
+    }
+    Message.CREATE_ANALYZING.send(user, arena.displayName());
+    long startTime = System.currentTimeMillis();
+    if (!splitIntoChunks(arena)) {
+      arena.forEach(plugin.chunkManager()::cancel);
+      Message.CREATE_FAIL.send(user, arena.displayName());
+      return false;
+    }
+    arena.metadata(new ArenaMetadata(arena));
+    final long timeoutMoment = startTime + plugin.configManager().config().timeout();
+    plugin.executor().sync().repeat(task -> {
+      final long time = System.currentTimeMillis();
+      if (time > timeoutMoment) {
+        arena.forEach(plugin.chunkManager()::cancel);
+        Message.CREATE_FAIL_TIMEOUT.send(user, arena.displayName());
+        remove(arena.name());
+        task.cancel();
+      } else {
+        if (arena.stream().allMatch(GaiaChunk::analyzed) && arena.finalizeArena()) {
+          WorldEdit.getInstance().getEventBus().post(new ArenaAnalyzeEvent(arena, time - startTime));
+          GaiaIO.instance().saveArena(arena).thenAccept(result -> {
+            if (result) {
+              Message.CREATE_SUCCESS.send(user, arena.displayName());
+            } else {
+              remove(arena.name());
+              Message.CREATE_FAIL.send(user, arena.displayName());
+            }
+          });
+          task.cancel();
+        }
+      }
+    }, 1, 1);
+    add(arena);
+    return true;
+  }
+
+  public long nextRevertTime(Arena arena) {
+    return arena.lastReverted() + plugin.configManager().config().cooldown();
+  }
+
+  public @Nullable Arena standingArena(GaiaUser user) {
+    Key worldId = user.worldKey();
+    BlockVector3 point = Optional.ofNullable(user.position()).map(Vector3::toBlockPoint).orElse(null);
+    if (worldId == null || point == null) {
+      return null;
+    }
+    Predicate<Arena> matcher = a -> a.worldKey().equals(worldId) && a.region().contains(point);
+    return plugin.arenaManager().stream().filter(matcher).findAny().orElse(null);
+  }
 
   public Iterator<Arena> iterator() {
     return Collections.unmodifiableCollection(arenas.values()).iterator();

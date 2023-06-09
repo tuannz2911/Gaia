@@ -17,23 +17,22 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.command;
+package me.moros.gaia.fabric;
 
-import cloud.commandframework.Command.Builder;
-import cloud.commandframework.CommandManager;
-import me.moros.gaia.GaiaPlugin;
-import me.moros.gaia.api.GaiaUser;
+import net.fabricmc.api.DedicatedServerModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 
-public interface Commander {
-  GaiaPlugin plugin();
+public final class GaiaBootstrap implements DedicatedServerModInitializer {
+  private GaiaFabric instance;
 
-  CommandManager<GaiaUser> manager();
-
-  Builder<GaiaUser> rootBuilder();
-
-  void register(Builder<GaiaUser> builder);
-
-  static Commander create(CommandManager<GaiaUser> manager, GaiaPlugin plugin) {
-    return new CommanderImpl(manager, plugin).init();
+  @Override
+  public void onInitializeServer() {
+    var container = FabricLoader.getInstance().getModContainer("gaia").orElseThrow(
+      () -> new IllegalStateException("Gaia mod missing in Fabric")
+    );
+    if (instance == null) {
+      instance = new GaiaFabric(container, FabricLoader.getInstance().getConfigDir().resolve("gaia"));
+    }
   }
 }
+

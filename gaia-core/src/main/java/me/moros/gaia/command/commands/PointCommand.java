@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Moros
+ * Copyright 2020-2023 Moros
  *
  * This file is part of Gaia.
  *
@@ -92,6 +92,6 @@ public record PointCommand(Commander commander) implements GaiaCommand {
       return;
     }
     ArenaPoint pointToTeleport = points.get(id == 0 ? ThreadLocalRandom.current().nextInt(points.size()) : id - 1);
-    commander().plugin().teleport(user, arena.worldUID(), pointToTeleport);
+    commander().plugin().teleport(user, arena.worldKey(), pointToTeleport);
   }
 }

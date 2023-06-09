@@ -88,12 +88,12 @@ public final class ArenaArgument extends CommandArgument<GaiaUser, Arena> {
       Supplier<ArgumentParseResult<Arena>> failure = () -> ArgumentParseResult.failure(new Throwable("Could not find the specified arena."));
       if (sanitized.equalsIgnoreCase("cur")) {
         var user = commandContext.getSender();
-        var worldUUID = user.worldUUID();
+        var worldUUID = user.worldKey();
         var arenaPoint = user.parent().pointFromUser(user);
         if (worldUUID != null && arenaPoint != null) {
           BlockVector3 point = arenaPoint.v().toBlockPoint();
           return user.parent().arenaManager().stream()
-            .filter(a -> a.worldUID().equals(worldUUID) && a.region().contains(point)).findAny()
+            .filter(a -> a.worldKey().equals(worldUUID) && a.region().contains(point)).findAny()
             .map(ArgumentParseResult::success).orElseGet(failure);
         }
       } else {

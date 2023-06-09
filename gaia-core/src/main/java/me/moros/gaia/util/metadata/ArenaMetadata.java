@@ -43,7 +43,7 @@ public class ArenaMetadata extends GaiaMetadata {
   public ArenaMetadata(Arena arena) {
     version = VERSION;
     name = arena.name();
-    world = arena.worldUID().toString();
+    world = arena.worldKey().toString();
     min = arena.region().min();
     max = arena.region().max();
     amount = arena.amount();

@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
@@ -50,9 +49,9 @@ public class TranslationManager {
   private TranslationRegistry registry;
   private final Logger logger;
 
-  public TranslationManager(Logger logger, String directory) {
+  public TranslationManager(Logger logger, Path directory) {
     this.logger = logger;
-    translationsDirectory = Paths.get(directory, "translations");
+    translationsDirectory = directory.resolve("translations");
     reload();
   }
 

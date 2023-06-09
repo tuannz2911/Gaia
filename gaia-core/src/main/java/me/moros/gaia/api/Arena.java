@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -34,6 +33,7 @@ import me.moros.gaia.util.Util;
 import me.moros.gaia.util.metadata.ArenaMetadata;
 import me.moros.gaia.util.metadata.GaiaMetadata;
 import me.moros.gaia.util.metadata.Metadatable;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -43,7 +43,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 public class Arena implements Metadatable, Iterable<GaiaChunk> {
   private final String name;
   private final World world;
-  private final UUID worldId;
+  private final Key worldId;
   private final GaiaRegion region;
   private final Component info;
 
@@ -57,7 +57,7 @@ public class Arena implements Metadatable, Iterable<GaiaChunk> {
 
   private long lastReverted = 0;
 
-  public Arena(String name, World world, UUID worldId, GaiaRegion region) {
+  public Arena(String name, World world, Key worldId, GaiaRegion region) {
     this.name = name.toLowerCase();
     this.world = world;
     this.worldId = worldId;
@@ -110,7 +110,7 @@ public class Arena implements Metadatable, Iterable<GaiaChunk> {
     return world;
   }
 
-  public UUID worldUID() {
+  public Key worldKey() {
     return worldId;
   }
 

@@ -1,15 +1,23 @@
+plugins {
+    alias(libs.plugins.fabric.loom)
+}
+
 dependencies {
+    minecraft(libs.fabric.minecraft)
+    mappings(loom.officialMojangMappings())
+    modImplementation(libs.fabric.api)
+    modImplementation(libs.fabric.loader)
+    modImplementation(libs.worldedit.fabric)
+    modImplementation(include(libs.adventure.fabric.get())!!)
+    modImplementation(include(libs.cloud.fabric.get())!!)
+    implementation(include(libs.cloud.minecraft.get())!!)
     implementation(project(":gaia-core"))
-    project.project(":gaia-paper:nms").subprojects.forEach {
-        implementation(project(it.path, "reobf"))
-    }
-    implementation(libs.bstats.bukkit)
-    implementation(libs.tasker.bukkit)
+    implementation(libs.tasker.fabric)
     implementation(libs.configurate.hocon)
-    implementation(libs.cloud.paper)
-    implementation(libs.cloud.minecraft) { isTransitive = false }
-    compileOnly(libs.paper)
-    compileOnly(libs.worldedit.bukkit)
+}
+
+loom {
+    interfaceInjection.enableDependencyInterfaceInjection
 }
 
 tasks {
@@ -30,7 +38,9 @@ tasks {
         isReproducibleFileOrder = true
     }
     named<Copy>("processResources") {
-        expand("pluginVersion" to project.version)
+        filesMatching("fabric.mod.json") {
+            expand("pluginVersion" to project.version)
+        }
         from("../LICENSE") {
             rename { "${rootProject.name.uppercase()}_${it}" }
         }

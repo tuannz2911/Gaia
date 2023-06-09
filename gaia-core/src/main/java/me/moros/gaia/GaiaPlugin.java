@@ -19,16 +19,17 @@
 
 package me.moros.gaia;
 
-import java.util.UUID;
-import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
+import com.sk89q.worldedit.entity.Player;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldedit.world.block.BlockState;
 import me.moros.gaia.api.ArenaPoint;
 import me.moros.gaia.api.GaiaUser;
 import me.moros.gaia.config.ConfigManager;
 import me.moros.gaia.locale.TranslationManager;
+import me.moros.tasker.executor.CompositeExecutor;
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 
@@ -49,17 +50,17 @@ public interface GaiaPlugin {
 
   BlockState parseBlockData(@Nullable String value);
 
-  @Nullable World findWorld(UUID uid);
+  @Nullable World findWorld(Key worldKey);
 
   @Nullable GaiaUser findUser(String input);
 
+  @Nullable Player adapt(GaiaUser user);
+
   Stream<String> users();
 
-  Executor executor();
+  CompositeExecutor executor();
 
   @Nullable ArenaPoint pointFromUser(GaiaUser user);
 
-  void teleport(GaiaUser user, UUID worldUid, ArenaPoint point);
-
-  void repeat(Runnable task, long delay, long period);
+  void teleport(GaiaUser user, Key worldKey, ArenaPoint point);
 }

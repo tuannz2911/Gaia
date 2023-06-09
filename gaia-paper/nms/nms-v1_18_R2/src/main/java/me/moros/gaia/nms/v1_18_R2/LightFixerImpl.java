@@ -22,22 +22,23 @@ package me.moros.gaia.nms.v1_18_R2;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import me.moros.gaia.LightFixer;
 import me.moros.gaia.api.GaiaChunkPos;
+import net.kyori.adventure.key.Key;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld;
 
 public class LightFixerImpl implements LightFixer {
   @Override
-  public void accept(UUID worldUuid, Collection<GaiaChunkPos> chunks) {
-    if (Bukkit.getWorld(worldUuid) instanceof CraftWorld world) {
+  public void accept(Key worldKey, Collection<GaiaChunkPos> chunks) {
+    if (Bukkit.getWorld(new NamespacedKey(worldKey.namespace(), worldKey.value())) instanceof CraftWorld world) {
       ServerChunkCache chunkSource = world.getHandle().getChunkSource();
       Set<ChunkPos> chunkSet = chunks.stream().map(gc -> new ChunkPos(gc.x(), gc.z()))
         .filter(v -> filter(chunkSource, v)).collect(Collectors.toCollection(LinkedHashSet::new));

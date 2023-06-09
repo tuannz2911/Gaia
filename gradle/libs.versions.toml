@@ -1,29 +1,47 @@
 [versions]
+
+tasker = "1.0.0-SNAPSHOT"
 junit = "5.9.3"
 shadow = "8.1.1"
-adventure = "4.14.0"
+adventure = "4.12.0"
+adventure-fabric = "5.8.0"
 configurate = "4.1.2"
 cloud = "1.8.3"
 worldedit = "7.2.14"
 paper = "1.18.2-R0.1-SNAPSHOT"
+minecraft = "1.19.4"
+fabric-loom = "1.2-SNAPSHOT"
+fabric-api = "0.81.0+1.19.4"
+fabric-loader = "0.14.19"
 
 [libraries]
 gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.7" }
 
+tasker-core = { module = "me.moros:tasker-core", version.ref = "tasker" }
+tasker-bukkit = { module = "me.moros:tasker-bukkit", version.ref = "tasker" }
+tasker-fabric = { module = "me.moros:tasker-fabric", version.ref = "tasker" }
+
 cloud-core = { module = "cloud.commandframework:cloud-core", version.ref = "cloud" }
 cloud-minecraft = { module = "cloud.commandframework:cloud-minecraft-extras", version.ref = "cloud" }
 cloud-paper = { module = "cloud.commandframework:cloud-paper", version.ref = "cloud" }
+cloud-fabric = { module = "cloud.commandframework:cloud-fabric", version.ref = "cloud" }
 
 configurate-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate" }
 
 adventure = { module = "net.kyori:adventure-api", version.ref = "adventure" }
+adventure-fabric = { module = "net.kyori:adventure-platform-fabric", version.ref = "adventure-fabric" }
 
 worldedit-core = { module = "com.sk89q.worldedit:worldedit-core", version.ref = "worldedit" }
 worldedit-bukkit = { module = "com.sk89q.worldedit:worldedit-bukkit", version.ref = "worldedit" }
+worldedit-fabric = { module = "com.sk89q.worldedit:worldedit-fabric-mc1.19.4", version = "7.2.14" }
 
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 bstats-bukkit = { module = "org.bstats:bstats-bukkit", version = "3.0.2" }
+
+fabric-minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric-api" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
 
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
@@ -35,3 +53,4 @@ junit = ["junit-api", "junit-engine"]
 checker = { id = "org.checkerframework", version = "0.6.28" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 userdev = { id = "io.papermc.paperweight.userdev", version = "1.5.5" }
+fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }

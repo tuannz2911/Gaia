@@ -19,10 +19,10 @@
 
 package me.moros.gaia;
 
-import java.util.UUID;
-
+import com.sk89q.worldedit.math.Vector3;
 import me.moros.gaia.api.GaiaUser;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.key.Key;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -34,13 +34,17 @@ public record BukkitGaiaUser(GaiaPlugin parent, CommandSender sender, boolean is
   }
 
   @Override
-  public @Nullable UUID worldUUID() {
-    return isPlayer ? ((Player) sender).getWorld().getUID() : null;
+  public @Nullable Key worldKey() {
+    return isPlayer ? ((Player) sender).getWorld().getKey() : null;
   }
 
   @Override
-  public boolean hasPermission(String permission) {
-    return sender().hasPermission(permission);
+  public @Nullable Vector3 position() {
+    if (isPlayer) {
+      var loc = ((Player) sender).getLocation();
+      return Vector3.at(loc.getX(), loc.getY(), loc.getZ());
+    }
+    return null;
   }
 
   @Override

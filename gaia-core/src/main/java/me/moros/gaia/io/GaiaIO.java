@@ -61,6 +61,7 @@ import me.moros.gaia.io.GaiaAdapter.GaiaPointAdapter;
 import me.moros.gaia.util.Util;
 import me.moros.gaia.util.metadata.ArenaMetadata;
 import me.moros.gaia.util.metadata.ChunkMetadata;
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class GaiaIO {
@@ -84,12 +85,12 @@ public final class GaiaIO {
       .create();
   }
 
-  public static boolean createInstance(GaiaPlugin plugin, String parentDirectory) {
+  public static boolean createInstance(GaiaPlugin plugin, Path parentDirectory) {
     if (IO != null) {
       return false;
     }
     try {
-      Path arenaDir = Paths.get(parentDirectory, "Arenas");
+      Path arenaDir = parentDirectory.resolve("Arenas");
       Files.createDirectories(arenaDir);
       IO = new GaiaIO(plugin, arenaDir);
     } catch (IOException e) {
@@ -143,19 +144,19 @@ public final class GaiaIO {
     return path.getFileName().toString().endsWith(DATA_SUFFIX);
   }
 
-  private Void logError(Throwable t) {
+  private <R> @Nullable R logError(Throwable t) {
     plugin.logger().error(t.getMessage(), t);
     return null;
   }
 
-  public CompletableFuture<Void> loadAllArenas() {
-    return CompletableFuture.runAsync(() -> {
+  public CompletableFuture<?> loadAllArenas() {
+    return plugin.executor().async().submit(() -> {
       try (Stream<Path> stream = Files.walk(arenaDir, 1)) {
         stream.filter(IO::isJson).forEach(IO::loadArena);
       } catch (IOException e) {
         throw new CompletionException(e);
       }
-    }, plugin.executor()).exceptionally(this::logError);
+    }).exceptionally(this::logError);
   }
 
   private void loadArena(Path path) {
@@ -168,7 +169,13 @@ public final class GaiaIO {
         return;
       }
       int amount = meta.amount;
-      UUID worldId = UUID.fromString(meta.world);
+      Key worldId;
+      try {
+        worldId = Key.key(meta.world);
+      } catch (Exception e) {
+        plugin.logger().warn("Found invalid world key `" + meta.world + "`" + " (" + path + ")", e);
+        return;
+      }
       World w = plugin.findWorld(worldId);
       if (w == null) {
         return;
@@ -200,7 +207,7 @@ public final class GaiaIO {
 
   public void updateArenaPoints(Arena arena) {
     final List<ArenaPoint> points = arena.points();
-    CompletableFuture.runAsync(() -> {
+    plugin.executor().async().submit(() -> {
       Path path = Paths.get(arenaDir.toString(), arena.name() + ARENA_SUFFIX);
       try (JsonReader reader = new JsonReader(new InputStreamReader(new FileInputStream(path.toFile()), StandardCharsets.UTF_8));
            OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(path.toFile()), StandardCharsets.UTF_8)) {
@@ -210,11 +217,11 @@ public final class GaiaIO {
       } catch (IOException e) {
         throw new CompletionException(e);
       }
-    }, plugin.executor()).exceptionally(this::logError);
+    }).exceptionally(this::logError);
   }
 
   public CompletableFuture<Boolean> saveArena(Arena arena) {
-    return CompletableFuture.supplyAsync(() -> {
+    return plugin.executor().async().submit(() -> {
       ArenaMetadata meta = (ArenaMetadata) arena.metadata();
       arena.forEach(c -> meta.addChunkMetadata((ChunkMetadata) c.metadata()));
       Path path = Paths.get(arenaDir.toString(), meta.name + ARENA_SUFFIX);
@@ -225,14 +232,14 @@ public final class GaiaIO {
       } catch (IOException e) {
         throw new CompletionException(e);
       }
-    }, plugin.executor()).exceptionally(e -> {
+    }).exceptionally(e -> {
       plugin.logger().error(e.getMessage(), e);
       return false;
     });
   }
 
   public CompletableFuture<@Nullable GaiaData> loadData(GaiaChunk chunk) {
-    return CompletableFuture.supplyAsync(() -> {
+    return plugin.executor().async().submit(() -> {
       Path path = Paths.get(arenaDir.toString(), chunk.parent().name(), chunk.id() + DATA_SUFFIX);
       try (Closer closer = Closer.create()) {
         FileInputStream fis = closer.register(new FileInputStream(path.toFile()));
@@ -242,14 +249,11 @@ public final class GaiaIO {
       } catch (IOException e) {
         throw new CompletionException(e);
       }
-    }, plugin.executor()).exceptionally(e -> {
-      plugin.logger().error(e.getMessage(), e);
-      return null;
-    });
+    }).exceptionally(this::logError);
   }
 
   public CompletableFuture<String> saveData(GaiaChunk chunk, GaiaData data) {
-    return CompletableFuture.supplyAsync(() -> {
+    return plugin.executor().async().submit(() -> {
       Path path = Paths.get(arenaDir.toString(), chunk.parent().name(), chunk.id() + DATA_SUFFIX);
       DigestOutputStream hos;
       try (Closer closer = Closer.create()) {
@@ -265,7 +269,7 @@ public final class GaiaIO {
       String checksum = Util.toHex(hashBytes);
       chunk.metadata(new ChunkMetadata(chunk, checksum));
       return checksum;
-    }, plugin.executor()).exceptionally(e -> {
+    }).exceptionally(e -> {
       plugin.logger().error(e.getMessage(), e);
       return "";
     });

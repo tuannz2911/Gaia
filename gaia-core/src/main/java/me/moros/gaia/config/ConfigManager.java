@@ -40,10 +40,10 @@ public final class ConfigManager {
   private final ConfigurationReference<CommentedConfigurationNode> reference;
   private final ValueReference<Config, CommentedConfigurationNode> configReference;
 
-  public ConfigManager(Logger logger, String directory) {
+  public ConfigManager(Logger logger, Path directory) {
     this.logger = logger;
     this.defaultConfig = new Config();
-    Path path = Path.of(directory, "gaia.conf");
+    Path path = directory.resolve("gaia.conf");
     try {
       Files.createDirectories(path.getParent());
       listener = WatchServiceListener.create();

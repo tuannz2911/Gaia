@@ -19,8 +19,8 @@
 
 package me.moros.gaia.locale;
 
-import me.moros.gaia.api.GaiaUser;
 import me.moros.gaia.util.Util;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.format.TextColor;
@@ -106,7 +106,7 @@ public interface Message {
   interface Args0 {
     Component build();
 
-    default void send(GaiaUser user) {
+    default void send(Audience user) {
       user.sendMessage(build());
     }
   }
@@ -114,7 +114,7 @@ public interface Message {
   interface Args1<A0> {
     Component build(A0 arg0);
 
-    default void send(GaiaUser user, A0 arg0) {
+    default void send(Audience user, A0 arg0) {
       user.sendMessage(build(arg0));
     }
   }
@@ -122,7 +122,7 @@ public interface Message {
   interface Args2<A0, A1> {
     Component build(A0 arg0, A1 arg1);
 
-    default void send(GaiaUser user, A0 arg0, A1 arg1) {
+    default void send(Audience user, A0 arg0, A1 arg1) {
       user.sendMessage(build(arg0, arg1));
     }
   }

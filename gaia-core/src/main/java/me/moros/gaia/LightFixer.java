@@ -20,13 +20,13 @@
 package me.moros.gaia;
 
 import java.util.Collection;
-import java.util.UUID;
 import java.util.function.BiConsumer;
 
 import me.moros.gaia.api.GaiaChunkPos;
+import net.kyori.adventure.key.Key;
 
 @FunctionalInterface
-public interface LightFixer extends BiConsumer<UUID, Collection<GaiaChunkPos>> {
+public interface LightFixer extends BiConsumer<Key, Collection<GaiaChunkPos>> {
   enum Mode {DISABLED, POST_CHUNK, POST_ARENA}
 
   default void onChunkRelight(int x, int z) {

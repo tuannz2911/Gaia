@@ -6,6 +6,6 @@ subprojects {
     apply(plugin = "io.papermc.paperweight.userdev")
 
     dependencies {
-        compileOnly(project(":gaia-core"))
+        compileOnly(project(":gaia-common"))
     }
 }

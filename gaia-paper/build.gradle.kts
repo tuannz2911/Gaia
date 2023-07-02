@@ -1,38 +1,35 @@
+plugins {
+    id("platform-conventions")
+}
+
 dependencies {
-    implementation(project(":gaia-core"))
+    gaiaImplementation(projects.gaiaCommon)
     project.project(":gaia-paper:nms").subprojects.forEach {
-        implementation(project(it.path, "reobf"))
+        println(it.path)
+        gaiaImplementation(project(it.path)) { targetConfiguration = "reobf" }
     }
-    implementation(libs.bstats.bukkit)
-    implementation(libs.tasker.bukkit)
-    implementation(libs.configurate.hocon)
-    implementation(libs.cloud.paper)
-    implementation(libs.cloud.minecraft) { isTransitive = false }
+    gaiaImplementation(libs.bstats.bukkit)
+    gaiaImplementation(libs.tasker.bukkit)
+    gaiaImplementation(libs.configurate.hocon) {}
+    gaiaImplementation(libs.cloud.paper)
+    gaiaImplementation(libs.cloud.minecraft) { isTransitive = false }
     compileOnly(libs.paper)
     compileOnly(libs.worldedit.bukkit)
 }
 
 tasks {
     shadowJar {
-        archiveClassifier.set("")
-        archiveBaseName.set(rootProject.name)
-        destinationDirectory.set(rootProject.buildDir)
         dependencies {
-            relocate("org.bstats", "me.moros.gaia.bstats")
-            relocate("cloud.commandframework", "me.moros.gaia.internal.cf")
-            relocate("io.leangen", "me.moros.gaia.internal.leangen")
-            relocate("com.typesafe", "me.moros.gaia.internal.typesafe")
-            relocate("org.spongepowered.configurate", "me.moros.gaia.internal.configurate")
+            reloc("io.leangen", "leangen")
         }
-    }
-    withType<AbstractArchiveTask> {
-        isPreserveFileTimestamps = false
-        isReproducibleFileOrder = true
     }
     named<Copy>("processResources") {
-        expand("pluginVersion" to project.version)
-        from("../LICENSE") {
-            rename { "${rootProject.name.uppercase()}_${it}" }
+        filesMatching("*plugin.yml") {
+            expand("pluginVersion" to project.version)
         }
     }
+}
+
+gaiaPlatform {
+    productionJar.set(tasks.shadowJar.flatMap { it.archiveFile })
 }

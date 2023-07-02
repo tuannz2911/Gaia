@@ -23,7 +23,7 @@ import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 
 public final class GaiaBootstrap implements DedicatedServerModInitializer {
-  private GaiaFabric instance;
+  private FabricGaia instance;
 
   @Override
   public void onInitializeServer() {
@@ -31,7 +31,7 @@ public final class GaiaBootstrap implements DedicatedServerModInitializer {
       () -> new IllegalStateException("Gaia mod missing in Fabric")
     );
     if (instance == null) {
-      instance = new GaiaFabric(container, FabricLoader.getInstance().getConfigDir().resolve("gaia"));
+      instance = new FabricGaia(container, FabricLoader.getInstance().getConfigDir().resolve("gaia"));
     }
   }
 }

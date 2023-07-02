@@ -1,4 +1,5 @@
 plugins {
+    id("platform-conventions")
     alias(libs.plugins.fabric.loom)
 }
 
@@ -11,9 +12,9 @@ dependencies {
     modImplementation(include(libs.adventure.fabric.get())!!)
     modImplementation(include(libs.cloud.fabric.get())!!)
     implementation(include(libs.cloud.minecraft.get())!!)
-    implementation(project(":gaia-core"))
-    implementation(libs.tasker.fabric)
-    implementation(libs.configurate.hocon)
+    gaiaImplementation(projects.gaiaCommon)
+    gaiaImplementation(libs.tasker.fabric)
+    gaiaImplementation(libs.configurate.hocon)
 }
 
 loom {
@@ -22,27 +23,24 @@ loom {
 
 tasks {
     shadowJar {
-        archiveClassifier.set("")
-        archiveBaseName.set(rootProject.name)
-        destinationDirectory.set(rootProject.buildDir)
         dependencies {
-            relocate("org.bstats", "me.moros.gaia.bstats")
-            relocate("cloud.commandframework", "me.moros.gaia.internal.cf")
-            relocate("io.leangen", "me.moros.gaia.internal.leangen")
-            relocate("com.typesafe", "me.moros.gaia.internal.typesafe")
-            relocate("org.spongepowered.configurate", "me.moros.gaia.internal.configurate")
+            exclude(dependency("io.leangen.geantyref:geantyref"))
         }
-    }
-    withType<AbstractArchiveTask> {
-        isPreserveFileTimestamps = false
-        isReproducibleFileOrder = true
     }
     named<Copy>("processResources") {
         filesMatching("fabric.mod.json") {
             expand("pluginVersion" to project.version)
         }
-        from("../LICENSE") {
-            rename { "${rootProject.name.uppercase()}_${it}" }
-        }
     }
+    remapJar {
+        val shadowJar = getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar")
+        dependsOn(shadowJar)
+        inputFile.set(shadowJar.archiveFile)
+        addNestedDependencies.set(true)
+        archiveFileName.set("${project.name}-mc${libs.versions.minecraft.get()}-${project.version}.jar")
+    }
+}
+
+gaiaPlatform {
+    productionJar.set(tasks.remapJar.flatMap { it.archiveFile })
 }

@@ -1,16 +1,14 @@
 plugins {
-    java
-    alias(libs.plugins.shadow)
+    `java-library`
     alias(libs.plugins.checker)
 }
 
 allprojects {
     group = "me.moros"
-    version = "1.9.0"
+    version = "2.0.0"
 
-    apply(plugin = "java")
+    apply(plugin = "java-library")
     apply(plugin = "org.checkerframework")
-    apply(plugin = "com.github.johnrengelman.shadow")
 
     repositories {
         mavenCentral()
@@ -29,8 +27,9 @@ allprojects {
             options.compilerArgs.addAll(listOf("-Xlint:unchecked", "-Xlint:deprecation"))
             options.encoding = "UTF-8"
         }
-        assemble {
-            dependsOn(shadowJar)
+        withType<AbstractArchiveTask> {
+            isPreserveFileTimestamps = false
+            isReproducibleFileOrder = true
         }
     }
 }

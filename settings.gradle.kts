@@ -1,3 +1,5 @@
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -7,7 +9,8 @@ pluginManagement {
 
 rootProject.name = "gaia"
 
-include("gaia-core")
+include("gaia-api")
+include("gaia-common")
 file("gaia-paper/nms").listFiles { _, name -> name.startsWith("nms-") }?.forEach {
     include("gaia-paper:nms:${it.name}")
 }

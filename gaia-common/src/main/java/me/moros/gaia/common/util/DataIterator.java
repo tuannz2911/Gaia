@@ -17,15 +17,12 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.api.region;
+package me.moros.gaia.common.util;
 
-import me.moros.math.Vector3i;
-import net.kyori.adventure.key.Key;
+import java.util.Iterator;
 
-public interface Selection {
-  Key level();
+public interface DataIterator<T> extends Iterator<T> {
+  int index();
 
-  Vector3i min();
-
-  Vector3i max();
+  void reset();
 }

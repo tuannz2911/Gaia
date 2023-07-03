@@ -11,6 +11,7 @@ dependencies {
     api(libs.tasker.core)
     api(libs.eventbus)
     api(libs.linbus)
+    compileOnlyApi(libs.worldedit.core)
     compileOnlyApi(libs.configurate.hocon)
     compileOnlyApi(libs.bundles.cloud)
     compileOnlyApi(libs.gson)

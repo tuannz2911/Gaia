@@ -28,8 +28,6 @@ public interface Config {
 
   int concurrentChunks();
 
-  int concurrentTransactions();
-
   int backgroundThreads();
 
   LightFixer lightFixer();

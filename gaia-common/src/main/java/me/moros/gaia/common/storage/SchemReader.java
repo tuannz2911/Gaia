@@ -25,6 +25,7 @@ import java.io.IOException;
 import me.moros.gaia.api.chunk.ChunkData;
 import me.moros.gaia.api.region.ChunkRegion;
 import me.moros.gaia.api.region.Region;
+import me.moros.gaia.common.storage.decoder.Decoder;
 import me.moros.math.Vector3i;
 import org.enginehub.linbus.stream.LinStream;
 import org.enginehub.linbus.tree.LinCompoundTag;

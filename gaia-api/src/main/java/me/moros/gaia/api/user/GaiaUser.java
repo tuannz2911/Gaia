@@ -41,13 +41,13 @@ public interface GaiaUser extends ForwardingAudience.Single, Locatable {
   }
 
   default @Nullable Arena standingArena() {
-    Key worldId = worldKey().orElse(null);
-    if (worldId == null) {
+    Key levelKey = level().orElse(null);
+    if (levelKey == null) {
       return null;
     }
     Vector3d point = position();
-    Predicate<Arena> matcher = a -> a.level().equals(worldId) && a.region().contains(point);
-    return parent().coordinator().arenaManager().stream().filter(matcher).findAny().orElse(null);
+    Predicate<Arena> matcher = a -> a.level().equals(levelKey) && a.region().contains(point);
+    return parent().coordinator().arenaService().stream().filter(matcher).findAny().orElse(null);
   }
 
   default Optional<Point> createPoint() {

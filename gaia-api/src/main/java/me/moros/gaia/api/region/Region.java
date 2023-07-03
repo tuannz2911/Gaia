@@ -41,7 +41,7 @@ public sealed interface Region permits RegionImpl {
   }
 
   default Vector3i center() {
-    return min().add(max()).multiply(0.5);
+    return min().add(max()).add(Vector3i.ONE).multiply(0.5);
   }
 
   default boolean contains(Position vector) {

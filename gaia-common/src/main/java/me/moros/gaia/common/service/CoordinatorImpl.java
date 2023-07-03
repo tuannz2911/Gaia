@@ -27,12 +27,13 @@ import me.moros.gaia.api.service.ArenaService;
 import me.moros.gaia.api.service.Coordinator;
 import me.moros.gaia.api.service.LevelService;
 import me.moros.gaia.api.service.OperationService;
+import me.moros.gaia.api.service.SelectionService;
 import me.moros.gaia.api.service.UserService;
 import me.moros.gaia.api.storage.Storage;
 import me.moros.gaia.common.GaiaFactory;
 import me.moros.gaia.common.event.EventBusImpl;
-import me.moros.gaia.common.storage.DecoderImpl;
 import me.moros.gaia.common.storage.FileStorage;
+import me.moros.gaia.common.storage.decoder.Decoder;
 import me.moros.tasker.executor.CompositeExecutor;
 import me.moros.tasker.executor.SimpleAsyncExecutor;
 import me.moros.tasker.executor.SyncExecutor;
@@ -43,6 +44,7 @@ public class CoordinatorImpl implements Coordinator {
   private final Storage storage;
   private final EventBus eventBus;
   private final UserService userService;
+  private final SelectionService selectionService;
   private final LevelService levelService;
   private final OperationService operationService;
   private final ArenaService arenaManager;
@@ -52,9 +54,10 @@ public class CoordinatorImpl implements Coordinator {
     var threads = calculateThreads(plugin.configManager().config().backgroundThreads());
     var pool = Executors.newScheduledThreadPool(threads);
     this.executor = CompositeExecutor.of(factory.build(SyncExecutor.class), new SimpleAsyncExecutor(pool));
-    this.storage = FileStorage.createInstance(plugin, new DecoderImpl(plugin));
+    this.storage = FileStorage.createInstance(plugin, factory.build(Decoder.class));
     this.eventBus = new EventBusImpl();
     this.userService = factory.build(UserService.class);
+    this.selectionService = factory.build(SelectionService.class);
     this.levelService = factory.build(LevelService.class);
     this.operationService = new OperationServiceImpl(plugin.configManager(), executor.sync());
     this.arenaManager = new ArenaServiceImpl(plugin);
@@ -92,17 +95,22 @@ public class CoordinatorImpl implements Coordinator {
   }
 
   @Override
+  public SelectionService selectionService() {
+    return selectionService;
+  }
+
+  @Override
   public LevelService levelService() {
     return levelService;
   }
 
   @Override
-  public OperationService operationManager() {
+  public OperationService operationService() {
     return operationService;
   }
 
   @Override
-  public ArenaService arenaManager() {
+  public ArenaService arenaService() {
     return arenaManager;
   }
 

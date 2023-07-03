@@ -30,7 +30,7 @@ import me.moros.gaia.api.region.ChunkRegion;
 public interface GaiaOperation<T> {
   long startTime();
 
-  Result update(int maxTransactions);
+  Result update();
 
   CompletableFuture<T> asFuture();
 

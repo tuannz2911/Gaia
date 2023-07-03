@@ -20,12 +20,10 @@
 package me.moros.gaia.fabric.service;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import me.moros.gaia.api.Gaia;
-import me.moros.gaia.api.region.Selection;
 import me.moros.gaia.api.service.UserService;
 import me.moros.gaia.api.user.GaiaUser;
 import me.moros.gaia.fabric.platform.FabricGaiaUser;
@@ -50,11 +48,6 @@ public record UserServiceImpl(Gaia plugin, PlayerList playerList) implements Use
       }
     }
     return player == null ? null : FabricGaiaUser.from(plugin(), player.createCommandSourceStack());
-  }
-
-  @Override
-  public Optional<Selection> selection(@Nullable UUID uuid) {
-    return Optional.empty(); // TODO add logic
   }
 
   @Override

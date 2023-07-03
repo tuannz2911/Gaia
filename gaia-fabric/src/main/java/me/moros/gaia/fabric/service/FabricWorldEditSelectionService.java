@@ -17,18 +17,26 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.api.service;
+package me.moros.gaia.fabric.service;
 
-import java.util.UUID;
-import java.util.stream.Stream;
-
+import com.sk89q.worldedit.entity.Player;
+import com.sk89q.worldedit.fabric.FabricAdapter;
 import me.moros.gaia.api.user.GaiaUser;
+import me.moros.gaia.common.service.WorldEditSelectionService;
+import net.kyori.adventure.identity.Identity;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.players.PlayerList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public interface UserService {
-  @Nullable GaiaUser findUser(UUID uuid);
+public class FabricWorldEditSelectionService extends WorldEditSelectionService {
+  private final PlayerList playerList;
 
-  @Nullable GaiaUser findUser(String input);
+  public FabricWorldEditSelectionService(MinecraftServer server) {
+    this.playerList = server.getPlayerList();
+  }
 
-  Stream<String> users();
+  @Override
+  protected @Nullable Player adapt(GaiaUser user) {
+    return user.get(Identity.UUID).map(playerList::getPlayer).map(FabricAdapter::adaptPlayer).orElse(null);
+  }
 }

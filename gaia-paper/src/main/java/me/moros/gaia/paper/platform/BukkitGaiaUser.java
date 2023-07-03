@@ -54,7 +54,7 @@ public class BukkitGaiaUser extends AbstractUser<CommandSender> {
     }
 
     @Override
-    public Optional<Key> worldKey() {
+    public Optional<Key> level() {
       return Optional.of(player.getWorld().key());
     }
 

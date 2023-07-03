@@ -25,16 +25,20 @@ import cloud.commandframework.CommandManager;
 import cloud.commandframework.execution.CommandExecutionCoordinator;
 import cloud.commandframework.fabric.FabricServerCommandManager;
 import me.moros.gaia.api.service.LevelService;
+import me.moros.gaia.api.service.SelectionService;
 import me.moros.gaia.api.service.UserService;
 import me.moros.gaia.api.user.GaiaUser;
 import me.moros.gaia.common.AbstractGaia;
 import me.moros.gaia.common.command.Commander;
 import me.moros.gaia.fabric.platform.FabricGaiaUser;
+import me.moros.gaia.fabric.service.FabricWorldEditSelectionService;
+import me.moros.gaia.fabric.service.GaiaSelectionService;
 import me.moros.gaia.fabric.service.LevelServiceImpl;
 import me.moros.gaia.fabric.service.UserServiceImpl;
 import me.moros.tasker.executor.SyncExecutor;
 import me.moros.tasker.fabric.FabricExecutor;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.server.MinecraftServer;
@@ -64,11 +68,20 @@ public class FabricGaia extends AbstractGaia<ModContainer> {
       .bind(SyncExecutor.class, FabricExecutor::new)
       .bind(UserService.class, () -> new UserServiceImpl(this, server.getPlayerList()))
       .bind(LevelService.class, () -> new LevelServiceImpl(this, server));
+    bindSelectionService(server);
     load();
   }
 
   private void onDisable(MinecraftServer server) {
     disable();
+  }
+
+  private void bindSelectionService(MinecraftServer server) {
+    if (FabricLoader.getInstance().isModLoaded("WorldEdit")) {
+      factory.bind(SelectionService.class, () -> new FabricWorldEditSelectionService(server));
+    } else {
+      factory.bind(SelectionService.class, GaiaSelectionService::new);
+    }
   }
 
   @Override

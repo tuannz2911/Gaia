@@ -39,6 +39,7 @@ import me.moros.gaia.common.command.Commander;
 import me.moros.gaia.common.command.GaiaCommand;
 import me.moros.gaia.common.command.argument.ArenaArgument;
 import me.moros.gaia.common.command.argument.GaiaUserArgument;
+import me.moros.gaia.common.util.UserArenaFactory;
 import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -95,7 +96,7 @@ public record ArenaCommand(Commander commander) implements GaiaCommand {
   }
 
   private void onList(GaiaUser user, Integer page) {
-    int count = user.parent().coordinator().arenaManager().size();
+    int count = user.parent().coordinator().arenaService().size();
     if (count == 0) {
       Message.LIST_NOT_FOUND.send(user);
       return;
@@ -119,7 +120,7 @@ public record ArenaCommand(Commander commander) implements GaiaCommand {
       builder.append(generatePaging(true, page + 1));
     }
     user.sendMessage(builder.build());
-    user.parent().coordinator().arenaManager().stream().sorted(Comparator.comparing(Arena::name)).
+    user.parent().coordinator().arenaService().stream().sorted(Comparator.comparing(Arena::name)).
       skip(skip).limit(AMOUNT_PER_PAGE).map(Arena::info).forEach(user::sendMessage);
     user.sendMessage(Component.text(TextUtil.generateLine(44), NamedTextColor.DARK_AQUA));
   }
@@ -154,21 +155,12 @@ public record ArenaCommand(Commander commander) implements GaiaCommand {
       Message.PLAYER_REQUIRED.send(user);
       return;
     }
-    String arenaName = TextUtil.sanitizeInput(name);
-    if (arenaName.length() < 3) {
-      Message.CREATE_ERROR_VALIDATION.send(user);
-      return;
-    }
-    if (user.parent().coordinator().arenaManager().contains(arenaName)) {
-      Message.CREATE_ERROR_EXISTS.send(user, arenaName);
-      return;
-    }
-    user.parent().coordinator().arenaManager().create(user, arenaName);
+    new UserArenaFactory(user).tryCreate(name);
   }
 
   private void onRemove(GaiaUser user, Arena arena) {
     String arenaName = arena.name();
-    if (user.parent().coordinator().arenaManager().remove(arenaName)) {
+    if (user.parent().coordinator().arenaService().remove(arenaName)) {
       Message.REMOVE_SUCCESS.send(user, arenaName);
     } else {
       Message.REMOVE_FAIL.send(user, arenaName);
@@ -184,7 +176,7 @@ public record ArenaCommand(Commander commander) implements GaiaCommand {
         return;
       }
     }
-    var revertResult = user.parent().coordinator().arenaManager().revert(arena);
+    var revertResult = user.parent().coordinator().arenaService().revert(arena);
     user.sendMessage(revertResult.message());
     revertResult.future().whenComplete((result, e) -> {
       if (e == null) {
@@ -207,7 +199,7 @@ public record ArenaCommand(Commander commander) implements GaiaCommand {
 
   private void onCancel(GaiaUser user, Arena arena) {
     if (arena.reverting()) {
-      user.parent().coordinator().arenaManager().cancelRevert(arena);
+      user.parent().coordinator().arenaService().cancelRevert(arena);
     } else {
       Message.CANCEL_FAIL.send(user, arena.displayName());
     }

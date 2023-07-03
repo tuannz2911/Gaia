@@ -32,11 +32,13 @@ public interface Coordinator {
 
   UserService userService();
 
+  SelectionService selectionService();
+
   LevelService levelService();
 
-  OperationService operationManager();
+  OperationService operationService();
 
-  ArenaService arenaManager();
+  ArenaService arenaService();
 
   void shutdown();
 }

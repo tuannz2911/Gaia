@@ -19,7 +19,6 @@
 
 package me.moros.gaia.api.storage;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
@@ -38,11 +37,7 @@ public interface Storage {
 
   CompletableFuture<Boolean> saveArena(Arena arena);
 
-  ChunkData loadData(String name, ChunkRegion.Validated chunk) throws IOException;
-
   CompletableFuture<Collection<ChunkData>> loadDataAsync(String name, Collection<ChunkRegion.Validated> chunkRegions);
-
-  long saveData(String name, ChunkData data) throws IOException;
 
   CompletableFuture<Collection<ChunkRegion.Validated>> saveDataAsync(String name, Iterable<ChunkData> chunkData);
 }

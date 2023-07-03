@@ -17,9 +17,10 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.common.storage;
+package me.moros.gaia.common.storage.decoder;
 
 import java.io.IOException;
+import java.util.function.Function;
 
 import me.moros.gaia.api.chunk.ChunkData;
 import me.moros.gaia.api.region.ChunkRegion;
@@ -27,6 +28,7 @@ import me.moros.math.Vector3i;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.enginehub.linbus.tree.LinCompoundTag;
 import org.enginehub.linbus.tree.LinIntArrayTag;
+import org.slf4j.Logger;
 
 public interface Decoder {
   default Vector3i decodeVector3i(@Nullable LinIntArrayTag tag) throws IOException {
@@ -43,4 +45,12 @@ public interface Decoder {
   int dataVersion();
 
   ChunkData decodeBlocks(ChunkRegion chunk, LinCompoundTag paletteObject, byte[] blocks) throws IOException;
+
+  static Decoder createVanilla(Logger logger) {
+    return create(new VanillaMapper(logger));
+  }
+
+  static <BlockState> Decoder create(Function<String, BlockState> mapper) {
+    return new DecoderImpl<>(mapper);
+  }
 }

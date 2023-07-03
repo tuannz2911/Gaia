@@ -23,7 +23,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import me.moros.gaia.api.arena.Arena;
-import me.moros.gaia.api.user.GaiaUser;
 import me.moros.gaia.api.util.RevertResult;
 
 public interface ArenaService extends Iterable<Arena> {
@@ -38,8 +37,6 @@ public interface ArenaService extends Iterable<Arena> {
   int size();
 
   Stream<Arena> stream();
-
-  boolean create(GaiaUser user, String arenaName);
 
   RevertResult revert(Arena arena);
 

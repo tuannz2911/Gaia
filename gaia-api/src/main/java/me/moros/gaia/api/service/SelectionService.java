@@ -17,28 +17,15 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.api.operation;
+package me.moros.gaia.api.service;
 
-import me.moros.gaia.api.chunk.ChunkData;
-import me.moros.gaia.api.platform.Level;
+import java.util.Optional;
 
-final class RevertOp extends AbstractOp.LevelChunkOp<Void> implements GaiaOperation.Revert {
-  private static final int SECTION_VOLUME = 4096;
+import me.moros.gaia.api.region.Region;
+import me.moros.gaia.api.user.GaiaUser;
 
-  private final ChunkData data;
+public interface SelectionService {
+  void resetSelection(GaiaUser user);
 
-  RevertOp(Level level, ChunkData data) {
-    super(level, data.chunk());
-    this.data = data;
-  }
-
-  @Override
-  protected Result processStep() {
-    if (level.restoreSnapshot(data, SECTION_VOLUME)) {
-      return Result.CONTINUE;
-    } else {
-      future.complete(null);
-      return Result.REMOVE;
-    }
-  }
+  Optional<Region> selection(GaiaUser user);
 }

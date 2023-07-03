@@ -19,12 +19,10 @@
 
 package me.moros.gaia.paper.service;
 
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import me.moros.gaia.api.Gaia;
-import me.moros.gaia.api.region.Selection;
 import me.moros.gaia.api.service.UserService;
 import me.moros.gaia.api.user.GaiaUser;
 import me.moros.gaia.paper.platform.BukkitGaiaUser;
@@ -50,11 +48,6 @@ public record UserServiceImpl(Gaia plugin, Server server) implements UserService
       }
     }
     return player == null ? null : BukkitGaiaUser.from(plugin(), player);
-  }
-
-  @Override
-  public Optional<Selection> selection(@Nullable UUID uuid) {
-    return Optional.empty(); // TODO add logic
   }
 
   @Override

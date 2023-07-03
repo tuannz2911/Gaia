@@ -26,15 +26,34 @@ import me.moros.gaia.api.chunk.ChunkData;
 import me.moros.gaia.api.chunk.ChunkPosition;
 import me.moros.gaia.api.platform.Level;
 import me.moros.gaia.api.region.ChunkRegion;
+import me.moros.gaia.common.platform.GaiaChunkData;
+import me.moros.gaia.common.util.DataIterator;
 import net.kyori.adventure.key.Key;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public record BukkitLevel(World handle, JavaPlugin plugin) implements Level {
+  @SuppressWarnings("unchecked")
   @Override
-  public void restoreSnapshot(ChunkData data, int section) {
-    // TODO implement
+  public boolean restoreSnapshot(ChunkData data, int amount) {
+    if (amount > 0 && data instanceof GaiaChunkData<?> chunkData) {
+      final int yOffset = chunkData.chunk().region().min().blockY() >> 4;
+      final DataIterator<BlockData> it = (DataIterator<BlockData>) chunkData.cachedIterator();
+      int counter = 0;
+      int index;
+      while (it.hasNext() && ++counter <= amount) {
+        index = it.index();
+        final int y = index >> 8;
+        final int remainder = index - (y << 8);
+        final int z = remainder >> 4;
+        final int x = remainder - z << 4;
+        handle().setBlockData(x, yOffset + y, z, it.next());
+      }
+      return it.hasNext();
+    }
+    return false;
   }
 
   @Override

@@ -21,22 +21,13 @@ package me.moros.gaia.common.platform;
 
 import me.moros.gaia.api.chunk.ChunkData;
 import me.moros.gaia.api.region.ChunkRegion;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 
-public record ChunkDataImpl(ChunkRegion chunk, Section[] sectionData) implements ChunkData {
+record VanillaChunkData(ChunkRegion chunk, VanillaSection[] sectionData) implements ChunkData {
   @Override
   public String getStateString(int x, int y, int z) {
-    return getState(x, y, z).toString();
-  }
-
-  public BlockState getState(int x, int y, int z) {
-    return sectionData[y >> 4].state(x, y & 15, z);
-  }
-
-  public void setState(int x, int y, int z, int id) {
-    sectionData[y >> 4].state(x, y & 15, z, id);
+    return sectionData[y >> 4].state(x, y, z).toString();
   }
 
   @Override
@@ -44,14 +35,14 @@ public record ChunkDataImpl(ChunkRegion chunk, Section[] sectionData) implements
     return sectionData.length;
   }
 
-  public static ChunkData create(ChunkRegion chunk, ChunkAccess access) {
+  static ChunkData from(ChunkRegion chunk, ChunkAccess access) {
     LevelChunkSection[] cs = access.getSections();
     int minSectionY = chunk.region().min().blockY() >> 4;
     int maxSectionY = chunk.region().max().blockY() >> 4;
-    Section[] sections = new Section[1 + (maxSectionY - minSectionY)];
+    VanillaSection[] sections = new VanillaSection[1 + (maxSectionY - minSectionY)];
     for (int i = 0; i < sections.length; i++) {
-      sections[i] = Section.copy(cs[minSectionY + i]);
+      sections[i] = VanillaSection.from(cs[minSectionY + i]);
     }
-    return new ChunkDataImpl(chunk, sections);
+    return new VanillaChunkData(chunk, sections);
   }
 }

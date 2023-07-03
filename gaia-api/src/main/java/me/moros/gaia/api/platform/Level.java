@@ -28,7 +28,7 @@ import me.moros.gaia.api.region.ChunkRegion;
 import net.kyori.adventure.key.Keyed;
 
 public interface Level extends Keyed {
-  void restoreSnapshot(ChunkData data, int section);
+  boolean restoreSnapshot(ChunkData data, int amount);
 
   CompletableFuture<ChunkData> snapshot(ChunkRegion chunk);
 

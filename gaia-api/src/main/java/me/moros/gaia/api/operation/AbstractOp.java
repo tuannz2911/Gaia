@@ -39,16 +39,11 @@ public abstract class AbstractOp<T> implements GaiaOperation<T> {
   }
 
   @Override
-  public final Result update(int maxTransactions) {
+  public final Result update() {
     if (future.isDone()) {
       return Result.REMOVE;
     }
-    int counter = 0;
-    Result result = Result.CONTINUE;
-    while (++counter <= maxTransactions && result == Result.CONTINUE) {
-      result = processStep();
-    }
-    return result;
+    return processStep();
   }
 
   @Override
@@ -57,7 +52,6 @@ public abstract class AbstractOp<T> implements GaiaOperation<T> {
   }
 
   protected abstract Result processStep();
-
 
   static abstract class LevelChunkOp<T> extends AbstractOp<T> implements GaiaOperation.ChunkOperation<T> {
     protected final Level level;

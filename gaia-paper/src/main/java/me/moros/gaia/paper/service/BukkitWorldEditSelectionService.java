@@ -17,27 +17,19 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.common.platform;
+package me.moros.gaia.paper.service;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.util.BitStorage;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.LevelChunkSection;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.entity.Player;
+import me.moros.gaia.api.user.GaiaUser;
+import me.moros.gaia.common.service.WorldEditSelectionService;
+import net.kyori.adventure.identity.Identity;
+import org.bukkit.Bukkit;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-public interface Section {
-  BlockState state(int x, int y, int z);
-
-  void state(int x, int y, int z, int id);
-
-  static Section copy(LevelChunkSection section) {
-    if (!section.hasOnlyAir()) {
-      return new VanillaSection(section.getStates().copy());
-    } else {
-      return VanillaSection.empty();
-    }
-  }
-
-  static Section from(Int2ObjectMap<BlockState> palette, BitStorage storage) {
-    return new ChunkSection(palette, storage);
+public class BukkitWorldEditSelectionService extends WorldEditSelectionService {
+  @Override
+  protected @Nullable Player adapt(GaiaUser user) {
+    return user.get(Identity.UUID).map(Bukkit::getPlayer).map(BukkitAdapter::adapt).orElse(null);
   }
 }

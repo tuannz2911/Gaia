@@ -4,8 +4,8 @@ author: Moros
 version: ${pluginVersion}
 load: POSTWORLD
 main: me.moros.gaia.paper.GaiaBootstrap
-depend: [WorldEdit]
-api-version: 1.18
+softdepend: [WorldEdit]
+api-version: "1.18"
 permissions:
   gaia.command.version:
     default: true

@@ -28,6 +28,7 @@ import me.moros.gaia.common.config.ConfigManagerImpl;
 import me.moros.gaia.common.locale.TranslationManager;
 import me.moros.gaia.common.service.CoordinatorImpl;
 import me.moros.gaia.common.service.RevertListener;
+import me.moros.gaia.common.storage.decoder.Decoder;
 import org.slf4j.Logger;
 
 public abstract class AbstractGaia<T> implements Gaia {
@@ -48,7 +49,7 @@ public abstract class AbstractGaia<T> implements Gaia {
 
     this.configManager = new ConfigManagerImpl(logger, this.path);
     this.translationManager = new TranslationManager(logger, this.path);
-    this.factory = new GaiaFactory();
+    this.factory = new GaiaFactory().bind(Decoder.class, () -> Decoder.createVanilla(logger));
   }
 
   protected void load() {

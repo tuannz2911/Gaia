@@ -25,7 +25,7 @@ import me.moros.math.Vector3d;
 import net.kyori.adventure.key.Key;
 
 public interface Locatable {
-  default Optional<Key> worldKey() {
+  default Optional<Key> level() {
     return Optional.empty();
   }
 

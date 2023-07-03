@@ -17,28 +17,38 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.api.operation;
+package me.moros.gaia.common.util;
 
-import me.moros.gaia.api.chunk.ChunkData;
-import me.moros.gaia.api.platform.Level;
+import java.util.function.IntFunction;
 
-final class RevertOp extends AbstractOp.LevelChunkOp<Void> implements GaiaOperation.Revert {
-  private static final int SECTION_VOLUME = 4096;
+public final class DelegateIterator<T> implements DataIterator<T> {
+  private final byte[] data;
+  private final IntFunction<T> mapper;
+  private VarIntIterator iterator;
 
-  private final ChunkData data;
-
-  RevertOp(Level level, ChunkData data) {
-    super(level, data.chunk());
+  public DelegateIterator(byte[] data, IntFunction<T> mapper) {
     this.data = data;
+    this.mapper = mapper;
+    reset();
   }
 
   @Override
-  protected Result processStep() {
-    if (level.restoreSnapshot(data, SECTION_VOLUME)) {
-      return Result.CONTINUE;
-    } else {
-      future.complete(null);
-      return Result.REMOVE;
-    }
+  public int index() {
+    return iterator.index();
+  }
+
+  @Override
+  public void reset() {
+    this.iterator = new VarIntIterator(data);
+  }
+
+  @Override
+  public boolean hasNext() {
+    return iterator.hasNext();
+  }
+
+  @Override
+  public T next() {
+    return mapper.apply(iterator.next());
   }
 }

@@ -20,21 +20,14 @@
 package me.moros.gaia.common.platform;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.util.BitStorage;
-import net.minecraft.world.level.block.state.BlockState;
+import me.moros.gaia.api.chunk.ChunkData;
+import me.moros.gaia.api.region.ChunkRegion;
+import me.moros.gaia.common.util.DataIterator;
 
-record ChunkSection(Int2ObjectMap<BlockState> palette, BitStorage storage) implements Section {
+public record GaiaChunkData<BlockState>(ChunkRegion chunk, Int2ObjectMap<BlockState> palette, byte[] data,
+                                        DataIterator<BlockState> cachedIterator) implements ChunkData {
   @Override
-  public BlockState state(int x, int y, int z) {
-    return palette.get(storage.get(calculateIndex(x, y, z)));
-  }
-
-  @Override
-  public void state(int x, int y, int z, int id) {
-    storage.set(calculateIndex(x, y, z), id);
-  }
-
-  private static int calculateIndex(int x, int y, int z) {
-    return (y << 4 | z) << 4 | x;
+  public String getStateString(int x, int y, int z) {
+    throw new UnsupportedOperationException();
   }
 }

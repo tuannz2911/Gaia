@@ -19,27 +19,25 @@
 
 package me.moros.gaia.common.platform;
 
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.PalettedContainer;
-import net.minecraft.world.level.chunk.PalettedContainer.Strategy;
 
-record VanillaSection(PalettedContainer<BlockState> palettedContainer) implements Section {
-  private static final PalettedContainer<BlockState> EMPTY = new PalettedContainer<>(
-    Block.BLOCK_STATE_REGISTRY, Blocks.AIR.defaultBlockState(), Strategy.SECTION_STATES
-  );
+@FunctionalInterface
+interface VanillaSection {
+  BlockState state(int x, int y, int z);
 
-  @Override
-  public BlockState state(int x, int y, int z) {
-    return palettedContainer.get(x, y, z);
+  record VanillaSectionWrapper(PalettedContainer<BlockState> palettedContainer) implements VanillaSection {
+    private static final VanillaSection EMPTY = (x, y, z) -> Blocks.AIR.defaultBlockState();
+
+    @Override
+    public BlockState state(int x, int y, int z) {
+      return palettedContainer.get(x & 15, y & 15, z & 15);
+    }
   }
 
-  @Override
-  public void state(int x, int y, int z, int id) {
-  }
-
-  static Section empty() {
-    return new VanillaSection(EMPTY);
+  static VanillaSection from(LevelChunkSection section) {
+    return section.hasOnlyAir() ? VanillaSectionWrapper.EMPTY : new VanillaSectionWrapper(section.getStates().copy());
   }
 }

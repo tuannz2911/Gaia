@@ -89,16 +89,16 @@ public final class ArenaArgument extends CommandArgument<GaiaUser, Arena> {
       Supplier<ArgumentParseResult<Arena>> failure = () -> ArgumentParseResult.failure(new Throwable("Could not find the specified arena."));
       if (sanitized.equalsIgnoreCase("cur")) {
         var user = commandContext.getSender();
-        var worldUUID = user.worldKey().orElse(null);
+        var levelKey = user.level().orElse(null);
         var arenaPoint = user.createPoint().orElse(null);
-        if (worldUUID != null && arenaPoint != null) {
+        if (levelKey != null && arenaPoint != null) {
           Vector3i point = arenaPoint.toVector3i();
-          return user.parent().coordinator().arenaManager().stream()
-            .filter(a -> a.level().equals(worldUUID) && a.region().contains(point)).findAny()
+          return user.parent().coordinator().arenaService().stream()
+            .filter(a -> a.level().equals(levelKey) && a.region().contains(point)).findAny()
             .map(ArgumentParseResult::success).orElseGet(failure);
         }
       } else {
-        return commandContext.getSender().parent().coordinator().arenaManager().arena(sanitized)
+        return commandContext.getSender().parent().coordinator().arenaService().arena(sanitized)
           .map(ArgumentParseResult::success).orElseGet(failure);
       }
       return failure.get();
@@ -106,7 +106,7 @@ public final class ArenaArgument extends CommandArgument<GaiaUser, Arena> {
 
     @Override
     public List<String> suggestions(CommandContext<GaiaUser> commandContext, String input) {
-      return commandContext.getSender().parent().coordinator().arenaManager()
+      return commandContext.getSender().parent().coordinator().arenaService()
         .stream().map(Arena::name).sorted().collect(Collectors.toList());
     }
   }

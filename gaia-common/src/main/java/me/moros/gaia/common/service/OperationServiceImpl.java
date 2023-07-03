@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import me.moros.gaia.api.chunk.ChunkPosition;
-import me.moros.gaia.api.config.Config;
 import me.moros.gaia.api.config.ConfigManager;
 import me.moros.gaia.api.operation.GaiaOperation;
 import me.moros.gaia.api.operation.GaiaOperation.Result;
@@ -39,22 +38,21 @@ public final class OperationServiceImpl implements OperationService {
   private final Queue<GaiaOperation.ChunkOperation<?>> queue;
 
   private final AtomicBoolean updatedConfig;
-  private Limits limits;
+  private int concurrentChunks;
   private boolean valid;
 
   public OperationServiceImpl(ConfigManager configManager, SyncExecutor syncExecutor) {
     this.configManager = configManager;
     this.queue = new ConcurrentLinkedQueue<>();
     this.updatedConfig = new AtomicBoolean();
-    this.limits = setupLimits();
+    updateLimits();
     this.configManager.subscribe(n -> updatedConfig.set(true));
     syncExecutor.repeat(this::processTasks, 1, 1);
     this.valid = true;
   }
 
-  private Limits setupLimits() {
-    Config c = configManager.config();
-    return new Limits(c.concurrentChunks(), c.concurrentTransactions());
+  private void updateLimits() {
+    concurrentChunks = configManager.config().concurrentChunks();
   }
 
   private void processTasks() {
@@ -63,15 +61,15 @@ public final class OperationServiceImpl implements OperationService {
     }
     if (queue.isEmpty()) {
       if (updatedConfig.compareAndSet(true, false)) {
-        limits = setupLimits();
+        updateLimits();
       }
       return;
     }
     var it = queue.iterator();
     int counter = 0;
-    while (counter < limits.concurrentChunks() && it.hasNext()) {
+    while (counter < concurrentChunks && it.hasNext()) {
       var operation = it.next();
-      Result result = operation.update(limits.concurrentTransactions);
+      Result result = operation.update();
       if (result == Result.REMOVE) {
         cleanupTicket(operation);
         it.remove();
@@ -109,9 +107,6 @@ public final class OperationServiceImpl implements OperationService {
   public void cancel(Level level, ChunkRegion.Validated chunk) {
     queue.removeIf(op -> cancelMatching(op, level, chunk));
     level.removeChunkTicket(chunk);
-  }
-
-  private record Limits(int concurrentChunks, int concurrentTransactions) {
   }
 
   private boolean cancelMatching(GaiaOperation.ChunkOperation<?> op, Level level, ChunkPosition pos) {

@@ -57,6 +57,7 @@ import me.moros.gaia.api.region.ChunkRegion;
 import me.moros.gaia.api.storage.ChecksumMismatchException;
 import me.moros.gaia.api.storage.Storage;
 import me.moros.gaia.common.storage.adapter.Adapters;
+import me.moros.gaia.common.storage.decoder.Decoder;
 import me.moros.math.Vector3i;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.enginehub.linbus.stream.LinBinaryIO;
@@ -171,8 +172,7 @@ public final class FileStorage implements Storage {
     });
   }
 
-  @Override
-  public ChunkData loadData(String name, ChunkRegion.Validated chunkRegion) throws IOException {
+  private ChunkData loadData(String name, ChunkRegion.Validated chunkRegion) throws IOException {
     var checksum = ALGORITHM.get();
     var path = chunkPath(name, chunkRegion);
     try (var fis = Files.newInputStream(path);
@@ -205,8 +205,7 @@ public final class FileStorage implements Storage {
     });
   }
 
-  @Override
-  public long saveData(String name, ChunkData data) throws IOException {
+  private long saveData(String name, ChunkData data) throws IOException {
     var checksum = ALGORITHM.get();
     try (var fos = Files.newOutputStream(chunkPath(name, ChunkPosition.at(data.x(), data.z())));
          var cos = new CheckedOutputStream(fos, checksum);

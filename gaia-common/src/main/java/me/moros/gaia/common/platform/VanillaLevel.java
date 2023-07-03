@@ -25,10 +25,12 @@ import java.util.concurrent.CompletableFuture;
 import me.moros.gaia.api.chunk.ChunkData;
 import me.moros.gaia.api.platform.Level;
 import me.moros.gaia.api.region.ChunkRegion;
+import me.moros.gaia.common.util.DataIterator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
 public abstract class VanillaLevel implements Level {
@@ -44,44 +46,33 @@ public abstract class VanillaLevel implements Level {
     return handle;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public void restoreSnapshot(ChunkData data, int section) {
-    if (section < 0 || section >= data.sections()) {
-      throw new IndexOutOfBoundsException(section);
-    }
+  public boolean restoreSnapshot(ChunkData data, int amount) {
     var levelChunk = handle().getChunkSource().getChunkNow(data.x(), data.z());
-    if (levelChunk != null && data instanceof ChunkDataImpl chunkData) {
-      var region = data.chunk().region();
-      int sectionOffset = (region.min().blockY() >> 4) + section;
-
-      int minY = (sectionOffset << 4) + region.min().blockY() & 15;
-      int minZ = region.min().blockZ();
-      int minX = region.min().blockX();
-
-      int maxY = (sectionOffset << 4) + region.max().blockY() & 15;
-      int maxZ = region.max().blockZ();
-      int maxX = region.max().blockX();
-
-      var mutablePos = new BlockPos.MutableBlockPos();
-      for (int y = minY; y < maxY; y++) {
-        mutablePos.setY(y);
-        for (int z = minZ; z < maxZ; z++) {
-          mutablePos.setZ(z);
-          for (int x = minX; x < maxX; x++) {
-            mutablePos.setX(x);
-            levelChunk.setBlockState(mutablePos, chunkData.getState(x, y, z), false);
-          }
-        }
+    if (levelChunk != null && amount > 0 && data instanceof GaiaChunkData<?> chunkData) {
+      final int yOffset = chunkData.chunk().region().min().blockY() >> 4;
+      final DataIterator<BlockState> it = (DataIterator<BlockState>) chunkData.cachedIterator();
+      int counter = 0;
+      int index;
+      final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
+      while (it.hasNext() && ++counter <= amount) {
+        index = it.index();
+        final int y = index >> 8;
+        final int remainder = index - (y << 8);
+        final int z = remainder >> 4;
+        final int x = remainder - z << 4;
+        levelChunk.setBlockState(mutablePos.set(x, yOffset + y, z), it.next(), false);
       }
-    } else {
-      throw new UnsupportedOperationException();
+      return it.hasNext();
     }
+    return false;
   }
 
   @Override
   public CompletableFuture<ChunkData> snapshot(ChunkRegion chunk) {
     return handle().getChunkSource().getChunkFuture(chunk.x(), chunk.z(), ChunkStatus.EMPTY, false)
-      .thenApply(r -> ChunkDataImpl.create(chunk, r.orThrow()));
+      .thenApply(r -> VanillaChunkData.from(chunk, r.orThrow()));
   }
 
   @Override

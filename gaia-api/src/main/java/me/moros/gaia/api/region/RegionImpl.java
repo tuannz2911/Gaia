@@ -24,6 +24,6 @@ import me.moros.math.Vector3i;
 record RegionImpl(Vector3i min, Vector3i max) implements Region {
   @Override
   public String toString() {
-    return "Region: (Min: " + min() + " - Max: " + max() + ")";
+    return min() + " to " + max();
   }
 }

@@ -106,12 +106,15 @@ public class ArenaServiceImpl implements ArenaService {
       .map(batch -> plugin.coordinator().storage().loadDataAsync(arena.name(), batch)).toList(); // Load data
 
     var future = FutureUtil.createFailFastBatch(futures) // Create future
-      .thenAccept(batches -> batches.stream().flatMap(Collection::stream)
-        .map(data -> GaiaOperation.revert(level, data))
-        .forEach(plugin.coordinator().operationService()::add)
-      ).handle((ignored, throwable) -> {
+      .thenCompose(batches -> {
+        var opFutures = batches.stream().flatMap(Collection::stream)
+          .map(data -> GaiaOperation.revert(level, data))
+          .map(plugin.coordinator().operationService()::add).toList();
+        return FutureUtil.createFailFast(opFutures);
+      })
+      .handle((ignored, throwable) -> {
         boolean completed = throwable == null;
-        long result = completed ? -1 : System.currentTimeMillis() - startTime;
+        long result = System.currentTimeMillis() - startTime;
         plugin.coordinator().eventBus().postArenaRevertEvent(arena, result, completed);
         return completed ? OptionalLong.of(result) : OptionalLong.empty();
       });

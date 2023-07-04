@@ -62,6 +62,11 @@ public class FabricGaiaUser extends AbstractUser<CommandSourceStack> {
     }
 
     @Override
+    public boolean isPlayer() {
+      return true;
+    }
+
+    @Override
     public void teleport(Key worldKey, Point point) {
       for (ServerLevel level : player.getServer().getAllLevels()) {
         if (worldKey.equals(level.dimension().location())) {

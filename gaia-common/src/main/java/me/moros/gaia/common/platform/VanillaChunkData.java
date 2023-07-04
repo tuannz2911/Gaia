@@ -21,6 +21,7 @@ package me.moros.gaia.common.platform;
 
 import me.moros.gaia.api.chunk.ChunkData;
 import me.moros.gaia.api.region.ChunkRegion;
+import me.moros.gaia.api.util.ChunkUtil;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 
@@ -36,12 +37,12 @@ record VanillaChunkData(ChunkRegion chunk, VanillaSection[] sectionData) impleme
   }
 
   static ChunkData from(ChunkRegion chunk, ChunkAccess access) {
+    int size = ChunkUtil.calculateSections(chunk);
     LevelChunkSection[] cs = access.getSections();
-    int minSectionY = chunk.region().min().blockY() >> 4;
-    int maxSectionY = chunk.region().max().blockY() >> 4;
-    VanillaSection[] sections = new VanillaSection[1 + (maxSectionY - minSectionY)];
+    int sectionIndexOffset = access.getSectionIndex(chunk.region().min().blockY());
+    VanillaSection[] sections = new VanillaSection[size];
     for (int i = 0; i < sections.length; i++) {
-      sections[i] = VanillaSection.from(cs[minSectionY + i]);
+      sections[i] = VanillaSection.from(cs[sectionIndexOffset + i]);
     }
     return new VanillaChunkData(chunk, sections);
   }

@@ -127,10 +127,10 @@ public record ArenaCommand(Commander commander) implements GaiaCommand {
   }
 
   private void onInfo(GaiaUser user, Arena arena) {
+    Message.INFO_HEADER.send(user);
     user.sendMessage(arena.info());
     List<Point> points = arena.points();
     if (points.isEmpty()) {
-      Message.NO_POINTS.send(user, arena.displayName());
       return;
     }
     ListIterator<Point> it = points.listIterator();

@@ -21,6 +21,7 @@ package me.moros.gaia.fabric.service;
 
 import java.util.UUID;
 
+import me.moros.gaia.api.locale.Message;
 import me.moros.gaia.common.service.AbstractSelectionService;
 import me.moros.math.Vector3i;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
@@ -63,6 +64,7 @@ public class GaiaSelectionService extends AbstractSelectionService {
       Key level = world.dimension().location();
       var pos = Vector3i.of(blockPos.getX(), blockPos.getY(), blockPos.getZ());
       registerClick(uuid, level, pos);
+      Message.SELECTION_FIRST.send((ServerPlayer) player, pos.toString());
       return InteractionResult.SUCCESS;
     }
     return InteractionResult.PASS;
@@ -75,6 +77,7 @@ public class GaiaSelectionService extends AbstractSelectionService {
       var blockPos = blockHitResult.getBlockPos();
       var pos = Vector3i.of(blockPos.getX(), blockPos.getY(), blockPos.getZ());
       registerInteraction(uuid, level, pos);
+      Message.SELECTION_SECOND.send((ServerPlayer) player, pos.toString());
       return InteractionResult.SUCCESS;
     }
     return InteractionResult.PASS;

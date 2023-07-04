@@ -21,11 +21,13 @@ package me.moros.gaia.paper.service;
 
 import java.util.UUID;
 
+import me.moros.gaia.api.locale.Message;
 import me.moros.gaia.common.service.AbstractSelectionService;
 import me.moros.math.Vector3i;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -45,18 +47,23 @@ public class GaiaSelectionService extends AbstractSelectionService implements Li
     if (event.useItemInHand() == Result.DENY || event.getHand() == EquipmentSlot.OFF_HAND) {
       return;
     }
-    UUID uuid = event.getPlayer().getUniqueId();
-    Key level = event.getPlayer().getWorld().key();
+    Player player = event.getPlayer();
+    UUID uuid = player.getUniqueId();
+    Key level = player.getWorld().key();
     Action action = event.getAction();
     final Block clickedBlock = event.getClickedBlock();
-    if (clickedBlock == null || event.getPlayer().getInventory().getItemInMainHand().getType() != Material.WOODEN_AXE) {
+    if (clickedBlock == null || player.getInventory().getItemInMainHand().getType() != Material.WOODEN_AXE) {
       return;
     }
     var pos = Vector3i.of(clickedBlock.getX(), clickedBlock.getY(), clickedBlock.getZ());
     if (action == Action.LEFT_CLICK_BLOCK) {
       registerClick(uuid, level, pos);
+      Message.SELECTION_FIRST.send(player, pos.toString());
+      event.setCancelled(true);
     } else if (action == Action.RIGHT_CLICK_BLOCK) {
       registerInteraction(uuid, level, pos);
+      Message.SELECTION_SECOND.send(player, pos.toString());
+      event.setCancelled(true);
     }
   }
 

@@ -35,7 +35,7 @@ public interface Storage {
 
   CompletableFuture<Iterable<Arena>> loadAllArenas();
 
-  CompletableFuture<Boolean> saveArena(Arena arena);
+  CompletableFuture<Arena> saveArena(Arena arena);
 
   CompletableFuture<Collection<ChunkData>> loadDataAsync(String name, Collection<ChunkRegion.Validated> chunkRegions);
 

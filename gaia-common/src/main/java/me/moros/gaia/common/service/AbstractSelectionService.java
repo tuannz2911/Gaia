@@ -58,7 +58,7 @@ public abstract class AbstractSelectionService implements SelectionService {
 
   private Selection updateAndGet(UUID uuid, Key level) {
     return cache.compute(uuid, (key, oldSel) -> {
-      if (oldSel == null || oldSel.level.equals(level)) {
+      if (oldSel == null || !oldSel.level.equals(level)) {
         return new Selection(level);
       } else {
         return oldSel;

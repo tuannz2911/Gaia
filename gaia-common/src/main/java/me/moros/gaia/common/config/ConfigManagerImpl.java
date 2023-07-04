@@ -35,7 +35,7 @@ import org.spongepowered.configurate.reference.ValueReference;
 import org.spongepowered.configurate.reference.WatchServiceListener;
 
 public final class ConfigManagerImpl implements ConfigManager {
-  private final Config defaultConfig;
+  private final ConfigImpl defaultConfig;
 
   private final Logger logger;
   private final WatchServiceListener listener;

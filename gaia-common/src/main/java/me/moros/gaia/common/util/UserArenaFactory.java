@@ -67,7 +67,6 @@ public final class UserArenaFactory {
       return false;
     }
     var region = plugin.coordinator().selectionService().selection(user).orElse(null);
-    plugin.coordinator().selectionService().resetSelection(user);
     if (region == null) {
       Message.CREATE_ERROR_SELECTION.send(user);
       return false;
@@ -85,6 +84,7 @@ public final class UserArenaFactory {
       Message.CREATE_ERROR_INTERSECTION.send(user);
       return false;
     }
+    plugin.coordinator().selectionService().resetSelection(user);
     return withValidSelection(arenaName, level, region);
   }
 
@@ -100,22 +100,31 @@ public final class UserArenaFactory {
       return false;
     }
     Message.CREATE_ANALYZING.send(user, arenaName);
-    createFuture(user, arenaName, level, chunkRegions);
+    createFuture(user, arenaName, level, region, chunkRegions);
     return true;
   }
 
-  private void createFuture(Audience user, String arenaName, Level level, Collection<ChunkRegion> chunkRegions) {
+  private void createFuture(Audience user, String arenaName, Level level, Region region, Collection<ChunkRegion> chunkRegions) {
     var futures = chunkRegions.stream().map(c -> GaiaOperation.snapshotAnalyze(level, c))
       .map(plugin.coordinator().operationService()::add).toList();
     long startTime = System.currentTimeMillis();
     FutureUtil.createFailFastBatch(futures)
       .orTimeout(plugin.configManager().config().timeout(), TimeUnit.MILLISECONDS)
       .thenCompose(data -> plugin.coordinator().storage().saveDataAsync(arenaName, data))
-      .whenComplete((validated, throwable) -> {
+      .thenCompose(validated -> {
         chunkRegions.forEach(level::removeChunkTicket); // Force cleanup
-        if (validated.size() == chunkRegions.size()) {
-          var arena = Arena.builder().name(arenaName).level(level.key()).chunks(validated).build();
-          plugin.coordinator().eventBus().postArenaAnalyzeEvent(arena, System.currentTimeMillis() - startTime);
+        int expected = chunkRegions.size();
+        int result = validated.size();
+        if (result != expected) {
+          return null;
+        }
+        var arena = Arena.builder().name(arenaName).level(level.key()).region(region).chunks(validated).build();
+        plugin.coordinator().eventBus().postArenaAnalyzeEvent(arena, System.currentTimeMillis() - startTime);
+        return plugin.coordinator().storage().saveArena(arena);
+      })
+      .whenCompleteAsync((arena, throwable) -> {
+        if (arena != null) {
+          plugin.coordinator().arenaService().add(arena);
           Message.CREATE_SUCCESS.send(user, arena.displayName());
           return;
         }
@@ -126,6 +135,6 @@ public final class UserArenaFactory {
           Message.CREATE_FAIL.send(user, arenaName);
           plugin.logger().warn(throwable.getMessage(), throwable);
         }
-      });
+      }, plugin.coordinator().executor().async());
   }
 }

@@ -55,6 +55,13 @@ public abstract class AbstractGaia<T> implements Gaia {
   protected void load() {
     this.coordinator = new CoordinatorImpl(this, factory);
     new RevertListener(this);
+    long startTime = System.currentTimeMillis();
+    coordinator.storage().loadAllArenas().thenAccept(arenas -> {
+      arenas.forEach(coordinator.arenaService()::add);
+      long delta = System.currentTimeMillis() - startTime;
+      int size = coordinator.arenaService().size();
+      logger().info(String.format("Successfully loaded %d %s (%dms)", size, (size == 1 ? "arena" : "arenas"), delta));
+    });
   }
 
   protected void disable() {

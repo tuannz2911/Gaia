@@ -41,8 +41,8 @@ import net.kyori.adventure.key.Key;
 final class ArenaAdapter implements JsonSerializer<Arena>, JsonDeserializer<Arena> {
   private static final int VERSION = 2;
 
-  private static final Type CHUNK_LIST = TypeToken.get(List.<ChunkRegion>of().getClass()).getType();
-  private static final Type POINT_LIST = TypeToken.get(List.<Point>of().getClass()).getType();
+  private static final Type CHUNK_LIST = TypeToken.getParameterized(List.class, ChunkRegion.Validated.class).getType();
+  private static final Type POINT_LIST = TypeToken.getParameterized(List.class, Point.class).getType();
 
   @Override
   public JsonElement serialize(Arena src, Type typeOfSrc, JsonSerializationContext context) {
@@ -71,11 +71,11 @@ final class ArenaAdapter implements JsonSerializer<Arena>, JsonDeserializer<Aren
     Vector3i max = context.deserialize(jsonObject.get("max"), Vector3i.class);
     var region = Region.of(min, max);
     int amount = jsonObject.get("amount").getAsInt();
-    List<ChunkRegion> chunks = context.deserialize(jsonObject.get("chunks"), CHUNK_LIST);
+    List<ChunkRegion.Validated> chunks = context.deserialize(jsonObject.get("chunks"), CHUNK_LIST);
     if (amount != chunks.size()) {
       throw new JsonParseException(String.format("Unable to parse arena, expected %d chunk regions but found %d", amount, chunks.size()));
     }
     List<Point> points = context.deserialize(jsonObject.get("points"), POINT_LIST);
-    return Arena.builder().name(name).level(level).region(region).points(points).build();
+    return Arena.builder().name(name).level(level).region(region).chunks(chunks).points(points).build();
   }
 }

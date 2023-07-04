@@ -20,65 +20,46 @@
 package me.moros.gaia.paper.platform;
 
 import java.util.Collection;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import me.moros.gaia.api.chunk.ChunkData;
 import me.moros.gaia.api.chunk.ChunkPosition;
-import me.moros.gaia.api.platform.Level;
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.common.platform.GaiaChunkData;
-import me.moros.gaia.common.util.DelegateIterator;
+import me.moros.gaia.common.platform.VanillaLevel;
 import net.kyori.adventure.key.Key;
+import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.bukkit.World;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.craftbukkit.v1_19_R3.CraftWorld;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public record BukkitLevel(World handle, JavaPlugin plugin) implements Level {
-  @SuppressWarnings("unchecked")
-  @Override
-  public boolean restoreSnapshot(ChunkData data, int amount) {
-    if (amount > 0 && data instanceof GaiaChunkData<?> chunkData) {
-      final int yOffset = chunkData.chunk().region().min().blockY() >> 4;
-      final DelegateIterator<BlockData> it = (DelegateIterator<BlockData>) chunkData.cachedIterator();
-      int counter = 0;
-      int index;
-      while (it.hasNext() && ++counter <= amount) {
-        index = it.index();
-        final int y = index >> 8;
-        final int remainder = index - (y << 8);
-        final int z = remainder >> 4;
-        final int x = remainder - z << 4;
-        handle().setBlockData(x, yOffset + y, z, it.next());
-      }
-      return it.hasNext();
-    }
-    return false;
-  }
+public final class BukkitLevel extends VanillaLevel {
+  private final World bukkitWorld;
 
-  @Override
-  public ChunkData snapshot(ChunkRegion chunk) {
-    var bukkitChunk = Objects.requireNonNull(handle().getChunkAt(chunk.x(), chunk.z()), "Chunk not loaded!");
-    return new BukkitChunkData(chunk, bukkitChunk.getChunkSnapshot(false, false, false));
-  }
-
-  @Override
-  public CompletableFuture<?> loadChunkWithTicket(int x, int z) {
-    return handle().getChunkAtAsync(x, z, false).thenAccept(c -> c.addPluginChunkTicket(plugin()));
-  }
-
-  @Override
-  public void removeChunkTicket(int x, int z) {
-    handle().removePluginChunkTicket(x, z, plugin());
-  }
-
-  @Override
-  public void fixLight(Collection<ChunkPosition> positions) {
+  public BukkitLevel(World world) {
+    super(((CraftWorld) world).getHandle());
+    this.bukkitWorld = world;
   }
 
   @Override
   public @NonNull Key key() {
-    return handle().key();
+    return bukkitWorld.key();
+  }
+
+  @Override
+  public void fixLight(Collection<ChunkPosition> positions) {
+    ServerChunkCache chunkSource = handle().getChunkSource();
+    Set<ChunkPos> chunkSet = positions.stream().map(gc -> new ChunkPos(gc.x(), gc.z()))
+      .filter(v -> filter(chunkSource, v)).collect(Collectors.toCollection(LinkedHashSet::new));
+    chunkSource.getLightEngine().relight(chunkSet, c -> {
+    }, i -> {
+    });
+  }
+
+  private boolean filter(ServerChunkCache chunkSource, ChunkPos pos) {
+    ChunkAccess chunk = (ChunkAccess) chunkSource.getChunkForLighting(pos.x, pos.z);
+    return chunk != null && chunk.isLightCorrect() && chunk.getStatus().isOrAfter(ChunkStatus.LIGHT);
   }
 }

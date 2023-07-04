@@ -35,6 +35,11 @@ public interface Message {
     .append(text("Gaia", DARK_AQUA))
     .append(text("] ", DARK_GRAY));
 
+  Args1<String> SELECTION_FIRST = point -> translatable("gaia.selection.first", DARK_AQUA)
+    .args(text(point));
+  Args1<String> SELECTION_SECOND = point -> translatable("gaia.selection.second", DARK_AQUA)
+    .args(text(point));
+
   Args1<String> CREATE_ANALYZING = arena -> brand(translatable("gaia.command.create.analyzing", GREEN)
     .args(text(arena, GOLD)));
   Args1<String> CREATE_FAIL = arena -> brand(translatable("gaia.command.create.fail", RED)
@@ -86,6 +91,7 @@ public interface Message {
     .append(translatable("gaia.command.version.hover.open-link", GRAY));
   Args0 CONFIG_RELOAD = () -> translatable("gaia.command.config-reload", GREEN);
 
+  Args0 INFO_HEADER = () -> brand(translatable("gaia.command.info.header", AQUA));
   Args1<Component> NO_POINTS = arena -> brand(translatable("gaia.command.point.empty", YELLOW)
     .args(arena));
   Args1<Component> LIST_POINTS = arena -> brand(translatable("gaia.command.point.header", YELLOW)

@@ -1,18 +1,17 @@
 plugins {
     id("platform-conventions")
+    id("xyz.jpenilla.run-paper").version("2.1.0")
+    alias(libs.plugins.userdev)
 }
 
 dependencies {
+    paperweight.paperDevBundle("${libs.versions.minecraft.get()}-R0.1-SNAPSHOT")
     gaiaImplementation(projects.gaiaCommon)
-    project.project(":gaia-paper:nms").subprojects.forEach {
-        gaiaImplementation(project(it.path)) { targetConfiguration = "reobf" }
-    }
     gaiaImplementation(libs.bstats.bukkit)
     gaiaImplementation(libs.tasker.bukkit)
     gaiaImplementation(libs.configurate.hocon) {}
     gaiaImplementation(libs.cloud.paper)
     gaiaImplementation(libs.cloud.minecraft) { isTransitive = false }
-    compileOnly(libs.paper)
     compileOnly(libs.worldedit.bukkit)
 }
 
@@ -27,8 +26,11 @@ tasks {
             expand("pluginVersion" to project.version)
         }
     }
+    runServer {
+        minecraftVersion(libs.versions.minecraft.get())
+    }
 }
 
 gaiaPlatform {
-    productionJar.set(tasks.shadowJar.flatMap { it.archiveFile })
+    productionJar.set(tasks.reobfJar.flatMap { it.outputJar })
 }

@@ -46,6 +46,11 @@ public class BukkitGaiaUser extends AbstractUser<CommandSender> {
     }
 
     @Override
+    public boolean isPlayer() {
+      return true;
+    }
+
+    @Override
     public void teleport(Key worldKey, Point point) {
       var world = player.getServer().getWorld(new NamespacedKey(worldKey.namespace(), worldKey.value()));
       if (world != null) {

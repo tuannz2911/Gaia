@@ -47,7 +47,7 @@ public class CoordinatorImpl implements Coordinator {
   private final SelectionService selectionService;
   private final LevelService levelService;
   private final OperationService operationService;
-  private final ArenaService arenaManager;
+  private final ArenaService arenaService;
 
   public CoordinatorImpl(Gaia plugin, GaiaFactory factory) {
     this.plugin = plugin;
@@ -60,18 +60,7 @@ public class CoordinatorImpl implements Coordinator {
     this.selectionService = factory.build(SelectionService.class);
     this.levelService = factory.build(LevelService.class);
     this.operationService = new OperationServiceImpl(plugin.configManager(), executor.sync());
-    this.arenaManager = new ArenaServiceImpl(plugin);
-    loadArenas();
-  }
-
-  private void loadArenas() {
-    long startTime = System.currentTimeMillis();
-    storage.loadAllArenas().thenAccept(arenas -> {
-      arenas.forEach(arenaManager::add);
-      long delta = System.currentTimeMillis() - startTime;
-      int size = arenaManager.size();
-      plugin.logger().info(String.format("Successfully loaded %d %s (%dms)", size, (size == 1 ? "arena" : "arenas"), delta));
-    });
+    this.arenaService = new ArenaServiceImpl(plugin);
   }
 
   @Override
@@ -111,7 +100,7 @@ public class CoordinatorImpl implements Coordinator {
 
   @Override
   public ArenaService arenaService() {
-    return arenaManager;
+    return arenaService;
   }
 
   @Override

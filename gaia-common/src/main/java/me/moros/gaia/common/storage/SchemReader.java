@@ -24,7 +24,6 @@ import java.io.IOException;
 
 import me.moros.gaia.api.chunk.ChunkData;
 import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.api.region.Region;
 import me.moros.gaia.common.storage.decoder.Decoder;
 import me.moros.math.Vector3i;
 import org.enginehub.linbus.stream.LinStream;
@@ -41,31 +40,33 @@ public class SchemReader implements Closeable {
     this.decoder = decoder;
   }
 
-  public ChunkData read() throws IOException {
+  public ChunkData read(ChunkRegion chunkRegion) throws IOException {
     LinCompoundTag schematicTag = getBaseTag();
     int schematicVersion = schematicTag.getTag("Version", LinTagType.intTag()).valueAsInt();
     if (schematicVersion != 3) {
       throw new IllegalStateException("Unknown schematic version " + schematicVersion);
     }
-    return readVersion3(schematicTag);
+    return readVersion3(schematicTag, chunkRegion);
   }
 
   private LinCompoundTag getBaseTag() throws IOException {
     return LinRootEntry.readFrom(rootStream).value().getTag("Schematic", LinTagType.compoundTag());
   }
 
-  private ChunkData readVersion3(LinCompoundTag schematicTag) throws IOException {
+  private ChunkData readVersion3(LinCompoundTag schematicTag, ChunkRegion chunkRegion) throws IOException {
     int width = schematicTag.getTag("Width", LinTagType.shortTag()).valueAsShort() & 0xFFFF;
     int height = schematicTag.getTag("Height", LinTagType.shortTag()).valueAsShort() & 0xFFFF;
     int length = schematicTag.getTag("Length", LinTagType.shortTag()).valueAsShort() & 0xFFFF;
 
-    Vector3i offset = decoder.decodeVector3i(schematicTag.findTag("Offset", LinTagType.intArrayTag()));
-    ChunkRegion chunk = ChunkRegion.create(Region.of(offset, offset.add(width, height, length).subtract(Vector3i.ONE)));
+    Vector3i size = Vector3i.of(width, height, length);
+    if (!chunkRegion.region().size().equals(size)) {
+      throw new IOException("Size mismatch!" + size);
+    }
 
     LinCompoundTag blockContainer = schematicTag.getTag("Blocks", LinTagType.compoundTag());
     LinCompoundTag paletteObject = blockContainer.getTag("Palette", LinTagType.compoundTag());
     byte[] blocks = blockContainer.getTag("Data", LinTagType.byteArrayTag()).value();
-    return decoder.decodeBlocks(chunk, paletteObject, blocks);
+    return decoder.decodeBlocks(chunkRegion, paletteObject, blocks);
   }
 
   @Override

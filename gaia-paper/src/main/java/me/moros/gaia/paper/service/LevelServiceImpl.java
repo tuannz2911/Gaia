@@ -21,15 +21,14 @@ package me.moros.gaia.paper.service;
 
 import me.moros.gaia.api.platform.Level;
 import me.moros.gaia.api.service.LevelService;
-import me.moros.gaia.common.platform.LevelAdapter;
+import me.moros.gaia.paper.platform.BukkitLevel;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
-import org.bukkit.World;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 
-public record LevelServiceImpl(Logger logger, LevelAdapter<World> nativeProvider) implements LevelService {
+public record LevelServiceImpl(Logger logger) implements LevelService {
   @Override
   public @Nullable Level findLevel(Key level) {
     var world = Bukkit.getServer().getWorld(new NamespacedKey(level.namespace(), level.value()));
@@ -37,6 +36,6 @@ public record LevelServiceImpl(Logger logger, LevelAdapter<World> nativeProvider
       logger().warn("Couldn't find level with key " + level);
       return null;
     }
-    return nativeProvider().asNative(world);
+    return new BukkitLevel(world);
   }
 }

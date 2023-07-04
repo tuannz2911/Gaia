@@ -79,10 +79,10 @@ public final class FileStorage implements Storage {
     this.container = container;
     this.decoder = decoder;
     this.gson = new GsonBuilder().setPrettyPrinting()
-      .registerTypeAdapter(Vector3i.class, Adapters.VECTOR)
-      .registerTypeAdapter(Point.class, Adapters.POINT)
-      .registerTypeAdapter(ChunkRegion.Validated.class, Adapters.CHUNK)
-      .registerTypeAdapter(Arena.class, Adapters.ARENA)
+      .registerTypeHierarchyAdapter(Vector3i.class, Adapters.VECTOR)
+      .registerTypeHierarchyAdapter(Point.class, Adapters.POINT)
+      .registerTypeHierarchyAdapter(ChunkRegion.Validated.class, Adapters.CHUNK)
+      .registerTypeHierarchyAdapter(Arena.class, Adapters.ARENA)
       .create();
   }
 
@@ -144,7 +144,7 @@ public final class FileStorage implements Storage {
   public CompletableFuture<Iterable<Arena>> loadAllArenas() {
     return plugin.coordinator().executor().async().submit(() -> {
       Iterable<Arena> arenas;
-      try (Stream<Path> stream = Files.walk(container, 1)) {
+      try (Stream<Path> stream = Files.walk(container, 2)) {
         arenas = stream.filter(this::isMeta).map(this::loadArena).filter(Objects::nonNull).toList();
       } catch (IOException e) {
         throw new CompletionException(e);
@@ -157,18 +157,18 @@ public final class FileStorage implements Storage {
   }
 
   @Override
-  public CompletableFuture<Boolean> saveArena(Arena arena) {
+  public CompletableFuture<Arena> saveArena(Arena arena) {
     return plugin.coordinator().executor().async().submit(() -> {
       Path arenaMeta = arenaMeta(arena.name());
       try (var writer = Files.newBufferedWriter(arenaMeta, StandardCharsets.UTF_8)) {
         gson.toJson(arena, writer);
-        return true;
+        return arena;
       } catch (Exception e) {
         throw new CompletionException(e);
       }
     }).exceptionally(e -> {
       plugin.logger().error(e.getMessage(), e);
-      return false;
+      return null;
     });
   }
 
@@ -181,7 +181,7 @@ public final class FileStorage implements Storage {
          var gis = new GZIPInputStream(bis);
          var dis = new DataInputStream(gis);
          var reader = new SchemReader(LinBinaryIO.read(dis), decoder)) {
-      var data = reader.read();
+      var data = reader.read(chunkRegion);
       validateChecksum(path, chunkRegion.checksum(), checksum.getValue());
       return data;
     }

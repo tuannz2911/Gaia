@@ -29,10 +29,7 @@ import me.moros.gaia.api.service.UserService;
 import me.moros.gaia.api.user.GaiaUser;
 import me.moros.gaia.common.AbstractGaia;
 import me.moros.gaia.common.command.Commander;
-import me.moros.gaia.common.platform.LevelAdapter;
-import me.moros.gaia.common.storage.decoder.Decoder;
 import me.moros.gaia.paper.platform.BukkitGaiaUser;
-import me.moros.gaia.paper.platform.BukkitLevel;
 import me.moros.gaia.paper.service.BukkitWorldEditSelectionService;
 import me.moros.gaia.paper.service.GaiaSelectionService;
 import me.moros.gaia.paper.service.LevelServiceImpl;
@@ -40,8 +37,6 @@ import me.moros.gaia.paper.service.UserServiceImpl;
 import me.moros.tasker.bukkit.BukkitExecutor;
 import me.moros.tasker.executor.SyncExecutor;
 import org.bstats.bukkit.Metrics;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.slf4j.Logger;
 
 public class BukkitGaia extends AbstractGaia<GaiaBootstrap> {
@@ -55,8 +50,8 @@ public class BukkitGaia extends AbstractGaia<GaiaBootstrap> {
     new Metrics(parent, 8608);
     factory
       .bind(SyncExecutor.class, () -> new BukkitExecutor(parent))
-      .bind(UserService.class, () -> new UserServiceImpl(this, parent.getServer()));
-    bindLevelService();
+      .bind(UserService.class, () -> new UserServiceImpl(this, parent.getServer()))
+      .bind(LevelService.class, () -> new LevelServiceImpl(logger()));
     bindSelectionService();
     load();
 
@@ -84,33 +79,6 @@ public class BukkitGaia extends AbstractGaia<GaiaBootstrap> {
     } else {
       factory.bind(SelectionService.class, () -> new GaiaSelectionService(parent));
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  private void bindLevelService() {
-    String fullName = parent.getServer().getClass().getPackageName();
-    String nmsVersion = fullName.substring(1 + fullName.lastIndexOf("."));
-    String className = "me.moros.gaia.paper.nms." + nmsVersion + ".LevelAdapterImpl";
-    try {
-      Class<?> cls = Class.forName(className);
-      if (!cls.isSynthetic() && LevelAdapter.class.isAssignableFrom(cls)) {
-        var adapter = (LevelAdapter<World>) cls.getDeclaredConstructor().newInstance();
-        factory.bind(LevelService.class, () -> new LevelServiceImpl(logger(), adapter));
-        return;
-      }
-    } catch (Exception ignore) {
-    }
-    String s = String.format("""
-
-      ****************************************************************
-      * Unable to find native module for version %s.
-      * Chunk relighting will not be available during this session.
-      ****************************************************************
-
-      """, nmsVersion);
-    logger().warn(s);
-    factory.bind(Decoder.class, () -> Decoder.create(Bukkit::createBlockData));
-    factory.bind(LevelService.class, () -> new LevelServiceImpl(logger(), w -> new BukkitLevel(w, parent)));
   }
 
   @Override

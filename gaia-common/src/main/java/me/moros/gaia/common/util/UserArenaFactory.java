@@ -20,10 +20,8 @@
 package me.moros.gaia.common.util;
 
 import java.util.Collection;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
 
 import me.moros.gaia.api.Gaia;
 import me.moros.gaia.api.arena.Arena;
@@ -109,31 +107,25 @@ public final class UserArenaFactory {
   private void createFuture(Audience user, String arenaName, Level level, Collection<ChunkRegion> chunkRegions) {
     var futures = chunkRegions.stream().map(c -> GaiaOperation.snapshotAnalyze(level, c))
       .map(plugin.coordinator().operationService()::add).toList();
-
-    var combined = FutureUtil.createFailFastBatch(futures);
     long startTime = System.currentTimeMillis();
-    // TODO Extra validation and counting
-    Supplier<CompletionException> exSupplier = () -> new CompletionException(new RuntimeException("Unable to save arena"));
-    combined.orTimeout(plugin.configManager().config().timeout(), TimeUnit.MILLISECONDS)
+    FutureUtil.createFailFastBatch(futures)
+      .orTimeout(plugin.configManager().config().timeout(), TimeUnit.MILLISECONDS)
       .thenCompose(data -> plugin.coordinator().storage().saveDataAsync(arenaName, data))
-      .thenAccept(validated -> {
-        if (!validated.isEmpty()) {
+      .whenComplete((validated, throwable) -> {
+        chunkRegions.forEach(level::removeChunkTicket); // Force cleanup
+        if (validated.size() == chunkRegions.size()) {
           var arena = Arena.builder().name(arenaName).level(level.key()).chunks(validated).build();
-          final long time = System.currentTimeMillis();
-          plugin.coordinator().eventBus().postArenaAnalyzeEvent(arena, time - startTime);
+          plugin.coordinator().eventBus().postArenaAnalyzeEvent(arena, System.currentTimeMillis() - startTime);
           Message.CREATE_SUCCESS.send(user, arena.displayName());
-        } else {
-          throw exSupplier.get();
+          return;
         }
-      }).exceptionally(t -> {
         plugin.coordinator().arenaService().remove(arenaName);
-        if (t instanceof TimeoutException) {
+        if (throwable instanceof TimeoutException) {
           Message.CREATE_FAIL_TIMEOUT.send(user, arenaName);
         } else {
           Message.CREATE_FAIL.send(user, arenaName);
-          plugin.logger().warn(t.getMessage(), t);
+          plugin.logger().warn(throwable.getMessage(), throwable);
         }
-        return null;
       });
   }
 }

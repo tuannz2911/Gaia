@@ -33,7 +33,7 @@ interface VanillaSection {
 
     @Override
     public BlockState state(int x, int y, int z) {
-      return palettedContainer.get(x & 15, y & 15, z & 15);
+      return palettedContainer.get(x & 0xF, y & 0xF, z & 0xF);
     }
   }
 

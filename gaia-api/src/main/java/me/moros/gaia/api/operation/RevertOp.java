@@ -21,9 +21,9 @@ package me.moros.gaia.api.operation;
 
 import me.moros.gaia.api.chunk.ChunkData;
 import me.moros.gaia.api.platform.Level;
+import me.moros.gaia.api.util.ChunkUtil;
 
 final class RevertOp extends AbstractOp.LevelChunkOp<Void> implements GaiaOperation.Revert {
-  private static final int SECTION_VOLUME = 4096;
 
   private final ChunkData data;
 
@@ -34,7 +34,7 @@ final class RevertOp extends AbstractOp.LevelChunkOp<Void> implements GaiaOperat
 
   @Override
   protected Result processStep() {
-    if (level.restoreSnapshot(data, SECTION_VOLUME)) {
+    if (level.restoreSnapshot(data, ChunkUtil.CHUNK_SECTION_VOLUME)) {
       return Result.CONTINUE;
     } else {
       future.complete(null);

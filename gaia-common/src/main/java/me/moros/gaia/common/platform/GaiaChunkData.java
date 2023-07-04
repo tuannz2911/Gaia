@@ -22,10 +22,10 @@ package me.moros.gaia.common.platform;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import me.moros.gaia.api.chunk.ChunkData;
 import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.common.util.DataIterator;
+import me.moros.gaia.common.util.DelegateIterator;
 
 public record GaiaChunkData<BlockState>(ChunkRegion chunk, Int2ObjectMap<BlockState> palette, byte[] data,
-                                        DataIterator<BlockState> cachedIterator) implements ChunkData {
+                                        DelegateIterator<BlockState> cachedIterator) implements ChunkData {
   @Override
   public String getStateString(int x, int y, int z) {
     throw new UnsupportedOperationException();

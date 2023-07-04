@@ -23,7 +23,6 @@ import me.moros.gaia.api.region.ChunkRegion;
 import me.moros.gaia.api.util.ChunkUtil;
 
 public interface ChunkData extends ChunkPosition {
-  int SECTION_SIZE = 16;
 
   ChunkRegion chunk();
 
@@ -42,14 +41,14 @@ public interface ChunkData extends ChunkPosition {
   }
 
   default int width() {
-    return SECTION_SIZE;
+    return ChunkUtil.CHUNK_SIZE;
   }
 
   default int height() {
-    return sections() * SECTION_SIZE;
+    return sections() * ChunkUtil.CHUNK_SECTION_SIZE;
   }
 
   default int length() {
-    return SECTION_SIZE;
+    return ChunkUtil.CHUNK_SIZE;
   }
 }

@@ -19,18 +19,24 @@
 
 package me.moros.gaia.common.service;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import me.moros.gaia.api.Gaia;
 import me.moros.gaia.api.arena.Arena;
 import me.moros.gaia.api.arena.Reversible;
+import me.moros.gaia.api.operation.GaiaOperation;
+import me.moros.gaia.api.platform.Level;
 import me.moros.gaia.api.service.ArenaService;
 import me.moros.gaia.api.util.RevertResult;
+import me.moros.gaia.common.util.FutureUtil;
+import me.moros.gaia.common.util.ListUtil;
 
 public class ArenaServiceImpl implements ArenaService {
   private final Gaia plugin;
@@ -86,8 +92,6 @@ public class ArenaServiceImpl implements ArenaService {
 
   @Override
   public RevertResult revert(Arena arena) {
-    return RevertResult.unloaded(arena);
-    /* TODO fix
     Level level = plugin.coordinator().levelService().findLevel(arena.level());
     if (level == null) {
       return RevertResult.unloaded(arena);
@@ -96,14 +100,22 @@ public class ArenaServiceImpl implements ArenaService {
     }
     arena.resetLastReverted();
     long startTime = System.currentTimeMillis();
-    arena.streamChunks().map(GaiaOperation.revert(level, c));
-    var future = new CompletableFuture<Void>().handle((v, e) -> {
-      boolean completed = e == null;
-      long result = completed ? -1 : System.currentTimeMillis() - startTime;
-      plugin.coordinator().eventBus().postArenaRevertEvent(arena, result, completed);
-      return completed ? OptionalLong.of(result) : OptionalLong.empty();
-    });
-    return RevertResult.success(arena, future);*/
+
+    arena.chunks().forEach(level::loadChunkWithTicket); // Preload chunks
+    var futures = ListUtil.partition(arena.chunks(), 32).stream()
+      .map(batch -> plugin.coordinator().storage().loadDataAsync(arena.name(), batch)).toList(); // Load data
+
+    var future = FutureUtil.createFailFastBatch(futures) // Create future
+      .thenAccept(batches -> batches.stream().flatMap(Collection::stream)
+        .map(data -> GaiaOperation.revert(level, data))
+        .forEach(plugin.coordinator().operationService()::add)
+      ).handle((ignored, throwable) -> {
+        boolean completed = throwable == null;
+        long result = completed ? -1 : System.currentTimeMillis() - startTime;
+        plugin.coordinator().eventBus().postArenaRevertEvent(arena, result, completed);
+        return completed ? OptionalLong.of(result) : OptionalLong.empty();
+      });
+    return RevertResult.success(arena, future);
   }
 
   @Override

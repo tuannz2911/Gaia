@@ -49,29 +49,28 @@ public abstract class AbstractSelectionService implements SelectionService {
   }
 
   protected void registerClick(UUID uuid, Key level, Vector3i point) {
-    rawSelection(uuid, level).ifPresent(s -> s.registerPos(point, true));
+    updateAndGet(uuid, level).registerPos(point, true);
   }
 
   protected void registerInteraction(UUID uuid, Key level, Vector3i point) {
-    rawSelection(uuid, level).ifPresent(s -> s.registerPos(point, false));
+    updateAndGet(uuid, level).registerPos(point, false);
   }
 
-  protected Optional<Selection> rawSelection(@Nullable UUID uuid, Key level) {
-    if (uuid != null) {
-      var selection = cache.get(uuid);
-      if (selection.level().equals(level)) {
-        return Optional.of(selection);
+  private Selection updateAndGet(UUID uuid, Key level) {
+    return cache.compute(uuid, (key, oldSel) -> {
+      if (oldSel == null || oldSel.level.equals(level)) {
+        return new Selection(level);
+      } else {
+        return oldSel;
       }
-    }
-    return Optional.empty();
+    });
   }
 
   @Override
   public Optional<Region> selection(GaiaUser user) {
     var levelKey = user.level().orElse(null);
     if (user.isPlayer() && levelKey != null) {
-      var result = rawSelection(user.getOrDefault(Identity.UUID, null), levelKey);
-      return result.flatMap(Selection::asRegion);
+      return user.get(Identity.UUID).map(cache::get).filter(s -> s.level().equals(levelKey)).flatMap(Selection::asRegion);
     }
     return Optional.empty();
   }

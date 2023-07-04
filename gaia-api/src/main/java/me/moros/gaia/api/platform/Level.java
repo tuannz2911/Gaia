@@ -30,7 +30,7 @@ import net.kyori.adventure.key.Keyed;
 public interface Level extends Keyed {
   boolean restoreSnapshot(ChunkData data, int amount);
 
-  CompletableFuture<ChunkData> snapshot(ChunkRegion chunk);
+  ChunkData snapshot(ChunkRegion chunk);
 
   default CompletableFuture<?> loadChunkWithTicket(ChunkPosition pos) {
     return loadChunkWithTicket(pos.x(), pos.z());

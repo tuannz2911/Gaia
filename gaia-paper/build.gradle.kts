@@ -5,7 +5,6 @@ plugins {
 dependencies {
     gaiaImplementation(projects.gaiaCommon)
     project.project(":gaia-paper:nms").subprojects.forEach {
-        println(it.path)
         gaiaImplementation(project(it.path)) { targetConfiguration = "reobf" }
     }
     gaiaImplementation(libs.bstats.bukkit)

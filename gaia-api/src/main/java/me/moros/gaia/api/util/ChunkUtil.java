@@ -32,6 +32,10 @@ public final class ChunkUtil {
   private ChunkUtil() {
   }
 
+  public static final int CHUNK_SIZE = 16;
+  public static final int CHUNK_SECTION_SIZE = 16;
+  public static final int CHUNK_SECTION_VOLUME = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SECTION_SIZE;
+
   public static List<ChunkPosition> spiralChunks(Region region) {
     final int sizeX = calculateChunkDistance(region.max().blockX(), region.min().blockX());
     final int sizeZ = calculateChunkDistance(region.max().blockZ(), region.min().blockZ());
@@ -77,11 +81,11 @@ public final class ChunkUtil {
     int tempX, tempZ;
     Vector3i v1, v2;
     for (int x = minX >> 4; x <= maxX >> 4; ++x) {
-      tempX = x * 16;
+      tempX = x * CHUNK_SIZE;
       for (int z = minZ >> 4; z <= maxZ >> 4; ++z) {
-        tempZ = z * 16;
+        tempZ = z * CHUNK_SIZE;
         v1 = atXZClamped(tempX, minY, tempZ, minX, maxX, minZ, maxZ);
-        v2 = atXZClamped(tempX + 15, maxY, tempZ + 15, minX, maxX, minZ, maxZ);
+        v2 = atXZClamped(tempX + (CHUNK_SIZE - 1), maxY, tempZ + (CHUNK_SIZE - 1), minX, maxX, minZ, maxZ);
         regions.add(ChunkRegion.create(Region.of(v1, v2)));
       }
     }
@@ -89,7 +93,7 @@ public final class ChunkUtil {
   }
 
   public static boolean isValidRegionSize(Region region) {
-    return region.size().blockX() <= 16 && region.size().blockZ() <= 16;
+    return region.size().blockX() <= CHUNK_SIZE && region.size().blockZ() <= CHUNK_SIZE;
   }
 
   public static void validateRegionSize(Region region) throws IllegalArgumentException {

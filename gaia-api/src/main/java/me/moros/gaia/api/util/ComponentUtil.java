@@ -20,39 +20,55 @@
 package me.moros.gaia.api.util;
 
 import me.moros.gaia.api.arena.Arena;
+import me.moros.gaia.api.arena.Point;
 import me.moros.math.Vector3i;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
+
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public final class ComponentUtil {
   private ComponentUtil() {
   }
 
+  public static Component generatePointInfo(Arena arena, Point point, int index) {
+    return Component.text()
+      .append(text("[", DARK_GRAY)).append(text(index, DARK_AQUA)).append(text("]", DARK_GRAY))
+      .hoverEvent(HoverEvent.showText(point.details()))
+      .clickEvent(ClickEvent.runCommand("/gaia teleport " + arena.name() + " " + index))
+      .build();
+  }
+
+  public static Component arenaInfoAsHover(Arena arena) {
+    final Component infoDetails = arena.info()
+      .appendNewline().appendNewline()
+      .append(text("Click to copy center coordinates to clipboard.", GRAY));
+    return text()
+      .append(text("> ", DARK_GRAY)).append(arena.displayName())
+      .hoverEvent(HoverEvent.showText(infoDetails))
+      .clickEvent(ClickEvent.copyToClipboard(formatVector(arena.region().center(), " ")))
+      .build();
+  }
+
   public static Component generateInfo(Arena arena) {
     int volume = arena.region().volume();
-    var size = arena.region().size();
-    Vector3i c = arena.region().center();
-    final Component infoDetails = Component.text()
-      .append(Component.text("Name: ", NamedTextColor.DARK_AQUA))
-      .append(Component.text(arena.name(), NamedTextColor.GREEN)).append(Component.newline())
-      .append(Component.text("World: ", NamedTextColor.DARK_AQUA))
-      .append(Component.text(arena.level().value(), NamedTextColor.GREEN)).append(Component.newline())
-      .append(Component.text("Dimensions: ", NamedTextColor.DARK_AQUA))
-      .append(Component.text(formatVector(size, " x "), NamedTextColor.GREEN)).append(Component.newline())
-      .append(Component.text("Volume: ", NamedTextColor.DARK_AQUA))
-      .append(Component.text(volume, NamedTextColor.GREEN)).append(Component.newline())
-      .append(Component.text("Center: ", NamedTextColor.DARK_AQUA))
-      .append(Component.text(formatVector(c, ", "), NamedTextColor.GREEN))
-      .append(Component.newline()).append(Component.newline())
-      .append(Component.text("Click to copy center coordinates to clipboard.", NamedTextColor.GRAY))
-      .build();
-    return Component.text()
-      .append(Component.text("> ", NamedTextColor.DARK_GRAY).append(arena.displayName()))
-      .append(Component.text(" (" + TextUtil.description(volume) + ")", NamedTextColor.DARK_AQUA))
-      .hoverEvent(HoverEvent.showText(infoDetails))
-      .clickEvent(ClickEvent.copyToClipboard(formatVector(c, " ")))
+    return text().color(DARK_AQUA)
+      .append(text("Name: "))
+      .append(text(arena.name(), GREEN)).appendNewline()
+      .append(text("World: "))
+      .append(text(arena.level().value(), GREEN)).appendNewline()
+      .append(text("Min: "))
+      .append(text(formatVector(arena.region().min(), ", "), GREEN)).appendNewline()
+      .append(text("Max: "))
+      .append(text(formatVector(arena.region().max(), ", "), GREEN)).appendNewline()
+      .append(text("Dimensions: "))
+      .append(text(formatVector(arena.region().size(), " x "), GREEN)).appendNewline()
+      .append(text("Volume: "))
+      .append(text(volume + " (" + TextUtil.description(volume) + ")", GREEN)).appendNewline()
+      .append(text("Center: "))
+      .append(text(formatVector(arena.region().center(), ", "), GREEN))
       .build();
   }
 

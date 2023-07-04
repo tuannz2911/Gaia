@@ -97,14 +97,14 @@ public final class OperationServiceImpl implements OperationService {
   @Override
   public <T> CompletableFuture<T> add(GaiaOperation.ChunkOperation<T> operation) {
     if (valid) {
-      queue.offer(operation);
-      return operation.asFuture();
+      operation.level().loadChunkWithTicket(operation.x(), operation.z()).thenAccept(ignore -> queue.offer(operation));
+      return operation.asFuture().whenComplete((result, throwable) -> cleanupTicket(operation));
     }
     return CompletableFuture.failedFuture(new RuntimeException("Unable to queue operation!"));
   }
 
   @Override
-  public void cancel(Level level, ChunkRegion.Validated chunk) {
+  public void cancel(Level level, ChunkRegion chunk) {
     queue.removeIf(op -> cancelMatching(op, level, chunk));
     level.removeChunkTicket(chunk);
   }

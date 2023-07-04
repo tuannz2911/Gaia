@@ -34,7 +34,7 @@ final class AnalyzeOp extends AbstractOp.LevelChunkOp<ChunkData> implements Gaia
   protected Result processStep() {
     if (!analyzed) {
       analyzed = true;
-      level.snapshot(chunk).thenAccept(future::complete);
+      future.complete(level.snapshot(chunk));
     }
     return Result.WAIT;
   }

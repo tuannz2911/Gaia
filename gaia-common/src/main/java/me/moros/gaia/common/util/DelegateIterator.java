@@ -19,9 +19,10 @@
 
 package me.moros.gaia.common.util;
 
+import java.util.Iterator;
 import java.util.function.IntFunction;
 
-public final class DelegateIterator<T> implements DataIterator<T> {
+public final class DelegateIterator<T> implements Iterator<T> {
   private final byte[] data;
   private final IntFunction<T> mapper;
   private VarIntIterator iterator;
@@ -32,12 +33,10 @@ public final class DelegateIterator<T> implements DataIterator<T> {
     reset();
   }
 
-  @Override
   public int index() {
     return iterator.index();
   }
 
-  @Override
   public void reset() {
     this.iterator = new VarIntIterator(data);
   }

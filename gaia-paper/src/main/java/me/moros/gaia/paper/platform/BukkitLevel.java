@@ -20,6 +20,7 @@
 package me.moros.gaia.paper.platform;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import me.moros.gaia.api.chunk.ChunkData;
@@ -27,7 +28,7 @@ import me.moros.gaia.api.chunk.ChunkPosition;
 import me.moros.gaia.api.platform.Level;
 import me.moros.gaia.api.region.ChunkRegion;
 import me.moros.gaia.common.platform.GaiaChunkData;
-import me.moros.gaia.common.util.DataIterator;
+import me.moros.gaia.common.util.DelegateIterator;
 import net.kyori.adventure.key.Key;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
@@ -40,7 +41,7 @@ public record BukkitLevel(World handle, JavaPlugin plugin) implements Level {
   public boolean restoreSnapshot(ChunkData data, int amount) {
     if (amount > 0 && data instanceof GaiaChunkData<?> chunkData) {
       final int yOffset = chunkData.chunk().region().min().blockY() >> 4;
-      final DataIterator<BlockData> it = (DataIterator<BlockData>) chunkData.cachedIterator();
+      final DelegateIterator<BlockData> it = (DelegateIterator<BlockData>) chunkData.cachedIterator();
       int counter = 0;
       int index;
       while (it.hasNext() && ++counter <= amount) {
@@ -57,9 +58,9 @@ public record BukkitLevel(World handle, JavaPlugin plugin) implements Level {
   }
 
   @Override
-  public CompletableFuture<ChunkData> snapshot(ChunkRegion chunk) {
-    return handle().getChunkAtAsync(chunk.x(), chunk.z(), false)
-      .thenApply(c -> new BukkitChunkData(chunk, c.getChunkSnapshot(false, false, false)));
+  public ChunkData snapshot(ChunkRegion chunk) {
+    var bukkitChunk = Objects.requireNonNull(handle().getChunkAt(chunk.x(), chunk.z()), "Chunk not loaded!");
+    return new BukkitChunkData(chunk, bukkitChunk.getChunkSnapshot(false, false, false));
   }
 
   @Override

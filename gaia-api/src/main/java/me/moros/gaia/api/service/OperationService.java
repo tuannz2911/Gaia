@@ -32,5 +32,5 @@ public interface OperationService {
 
   <T> CompletableFuture<T> add(GaiaOperation.ChunkOperation<T> operation);
 
-  void cancel(Level level, ChunkRegion.Validated chunkRegion);
+  void cancel(Level level, ChunkRegion chunkRegion);
 }

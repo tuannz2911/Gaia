@@ -33,6 +33,7 @@ import me.moros.gaia.api.arena.Arena;
 import me.moros.gaia.api.arena.Point;
 import me.moros.gaia.api.locale.Message;
 import me.moros.gaia.api.user.GaiaUser;
+import me.moros.gaia.api.util.ComponentUtil;
 import me.moros.gaia.api.util.TextUtil;
 import me.moros.gaia.common.command.CommandPermissions;
 import me.moros.gaia.common.command.Commander;
@@ -121,7 +122,7 @@ public record ArenaCommand(Commander commander) implements GaiaCommand {
     }
     user.sendMessage(builder.build());
     user.parent().coordinator().arenaService().stream().sorted(Comparator.comparing(Arena::name)).
-      skip(skip).limit(AMOUNT_PER_PAGE).map(Arena::info).forEach(user::sendMessage);
+      skip(skip).limit(AMOUNT_PER_PAGE).map(ComponentUtil::arenaInfoAsHover).forEach(user::sendMessage);
     user.sendMessage(Component.text(TextUtil.generateLine(44), NamedTextColor.DARK_AQUA));
   }
 
@@ -135,15 +136,7 @@ public record ArenaCommand(Commander commander) implements GaiaCommand {
     ListIterator<Point> it = points.listIterator();
     List<Component> components = new ArrayList<>();
     while (it.hasNext()) {
-      Point point = it.next();
-      int index = it.nextIndex();
-      components.add(Component.text()
-        .append(Component.text("[", NamedTextColor.DARK_GRAY))
-        .append(Component.text(index, NamedTextColor.DARK_AQUA))
-        .append(Component.text("]", NamedTextColor.DARK_GRAY))
-        .hoverEvent(HoverEvent.showText(point.details()))
-        .clickEvent(ClickEvent.runCommand("/gaia teleport " + arena.name() + " " + index))
-        .build());
+      components.add(ComponentUtil.generatePointInfo(arena, it.next(), it.nextIndex()));
     }
     JoinConfiguration sep = JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY));
     Message.LIST_POINTS.send(user, arena.displayName());

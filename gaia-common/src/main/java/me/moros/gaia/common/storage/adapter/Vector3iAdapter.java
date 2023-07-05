@@ -28,13 +28,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import me.moros.gaia.api.util.CoordinateUtil;
+import me.moros.gaia.api.util.ChunkUtil;
 import me.moros.math.Vector3i;
 
 final class Vector3iAdapter implements JsonSerializer<Vector3i>, JsonDeserializer<Vector3i> {
   @Override
   public JsonElement serialize(Vector3i src, Type typeOfSrc, JsonSerializationContext context) {
-    JsonArray array = new JsonArray();
+    JsonArray array = new JsonArray(3);
     array.add(src.blockX());
     array.add(src.blockY());
     array.add(src.blockZ());
@@ -48,7 +48,7 @@ final class Vector3iAdapter implements JsonSerializer<Vector3i>, JsonDeserialize
       throw new JsonParseException("Invalid Vector: Expected array length 3");
     }
     Vector3i v = Vector3i.of(array.get(0).getAsInt(), array.get(1).getAsInt(), array.get(2).getAsInt());
-    if (!CoordinateUtil.isValidPosition(v)) {
+    if (!ChunkUtil.isValidPosition(v)) {
       throw new JsonParseException("Invalid Vector: " + json);
     }
     return v;

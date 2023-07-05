@@ -17,7 +17,7 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.api.region;
+package me.moros.gaia.api.arena.region;
 
 import me.moros.gaia.api.arena.Reversible;
 import me.moros.gaia.api.chunk.ChunkPosition;

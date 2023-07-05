@@ -19,6 +19,8 @@
 
 package me.moros.gaia.common.command;
 
+import java.util.stream.Stream;
+
 import cloud.commandframework.permission.CommandPermission;
 import cloud.commandframework.permission.Permission;
 
@@ -29,17 +31,22 @@ public final class CommandPermissions {
   public static final CommandPermission HELP = create("help");
   public static final CommandPermission LIST = create("list");
   public static final CommandPermission INFO = create("info");
+  public static final CommandPermission VERSION = create("version");
+  public static final CommandPermission RELOAD = create("reload");
   public static final CommandPermission CREATE = create("create");
   public static final CommandPermission REMOVE = create("remove");
   public static final CommandPermission REVERT = create("revert");
   public static final CommandPermission CANCEL = create("cancel");
-  public static final CommandPermission VERSION = create("version");
-  public static final CommandPermission RELOAD = create("reload");
   public static final CommandPermission BYPASS = create("bypass");
   public static final CommandPermission POINT = create("point");
   public static final CommandPermission TELEPORT = create("teleport");
 
   private static Permission create(String node) {
     return Permission.of("gaia.command." + node);
+  }
+
+  public static Stream<CommandPermission> adminOnly() {
+    return Stream.of(HELP, LIST, INFO, VERSION, RELOAD,
+      CREATE, REMOVE, REVERT, CANCEL, BYPASS, POINT, TELEPORT);
   }
 }

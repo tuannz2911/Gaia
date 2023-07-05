@@ -21,9 +21,9 @@ package me.moros.gaia.api.service;
 
 import java.util.concurrent.CompletableFuture;
 
+import me.moros.gaia.api.arena.region.ChunkRegion;
 import me.moros.gaia.api.operation.GaiaOperation;
 import me.moros.gaia.api.platform.Level;
-import me.moros.gaia.api.region.ChunkRegion;
 
 public interface OperationService {
   void shutdown();

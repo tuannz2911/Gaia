@@ -22,7 +22,7 @@ package me.moros.gaia.api.event;
 import java.util.function.Consumer;
 
 import me.moros.gaia.api.arena.Arena;
-import me.moros.gaia.api.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.ChunkRegion;
 import net.kyori.adventure.key.Key;
 
 /**

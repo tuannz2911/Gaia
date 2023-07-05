@@ -17,21 +17,23 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.api.util;
+package me.moros.gaia.common.storage;
 
-import java.util.OptionalLong;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
+import java.io.IOException;
+import java.util.Locale;
 
-import net.kyori.adventure.text.Component;
+public class ChecksumMismatchException extends IOException {
+  private static final String MSG = "Checksum mismatch for file: %s, expected '%s' but found '%s'. File data might be corrupted.";
 
-record RevertResultImpl(Supplier<Component> supplier, CompletableFuture<OptionalLong> future) implements RevertResult {
-  RevertResultImpl(Supplier<Component> supplier) {
-    this(supplier, CompletableFuture.completedFuture(OptionalLong.empty()));
+  public ChecksumMismatchException(String file, long expected, long provided) {
+    super(formatMsg(file, expected, provided));
   }
 
-  @Override
-  public Component message() {
-    return supplier.get();
+  private static String formatMsg(String file, long expected, long provided) {
+    return String.format(MSG, file, toHex(expected), toHex(provided));
+  }
+
+  private static String toHex(long checksum) {
+    return Long.toHexString(checksum).toUpperCase(Locale.ROOT);
   }
 }

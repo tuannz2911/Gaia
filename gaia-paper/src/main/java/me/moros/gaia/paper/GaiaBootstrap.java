@@ -33,11 +33,15 @@ public final class GaiaBootstrap extends JavaPlugin {
 
   @Override
   public void onEnable() {
-    instance.onPluginEnable();
+    if (instance != null) {
+      instance.onPluginEnable();
+    }
   }
 
   @Override
   public void onDisable() {
-    instance.onPluginDisable();
+    if (instance != null) {
+      instance.onPluginDisable();
+    }
   }
 }

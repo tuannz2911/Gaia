@@ -17,38 +17,13 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.api.chunk;
+package me.moros.gaia.api.arena.region;
 
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.api.util.ChunkUtil;
+import me.moros.math.Vector3i;
 
-public interface ChunkData extends ChunkPosition {
-
-  ChunkRegion chunk();
-
-  default int x() {
-    return chunk().x();
-  }
-
-  default int z() {
-    return chunk().z();
-  }
-
-  String getStateString(int x, int y, int z);
-
-  default int sections() {
-    return ChunkUtil.calculateSections(chunk());
-  }
-
-  default int width() {
-    return ChunkUtil.CHUNK_SIZE;
-  }
-
-  default int height() {
-    return sections() * ChunkUtil.CHUNK_SECTION_SIZE;
-  }
-
-  default int length() {
-    return ChunkUtil.CHUNK_SIZE;
+record RegionImpl(Vector3i min, Vector3i max) implements Region {
+  @Override
+  public String toString() {
+    return min() + " to " + max();
   }
 }

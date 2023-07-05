@@ -21,7 +21,7 @@ package me.moros.gaia.api.service;
 
 import java.util.Optional;
 
-import me.moros.gaia.api.region.Region;
+import me.moros.gaia.api.arena.region.Region;
 import me.moros.gaia.api.user.GaiaUser;
 
 public interface SelectionService {

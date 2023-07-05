@@ -20,14 +20,17 @@
 package me.moros.gaia.paper;
 
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 import cloud.commandframework.execution.CommandExecutionCoordinator;
 import cloud.commandframework.paper.PaperCommandManager;
+import cloud.commandframework.permission.CommandPermission;
 import me.moros.gaia.api.service.LevelService;
 import me.moros.gaia.api.service.SelectionService;
 import me.moros.gaia.api.service.UserService;
 import me.moros.gaia.api.user.GaiaUser;
 import me.moros.gaia.common.AbstractGaia;
+import me.moros.gaia.common.command.CommandPermissions;
 import me.moros.gaia.common.command.Commander;
 import me.moros.gaia.paper.platform.BukkitGaiaUser;
 import me.moros.gaia.paper.service.BukkitWorldEditSelectionService;
@@ -37,6 +40,8 @@ import me.moros.gaia.paper.service.UserServiceImpl;
 import me.moros.tasker.bukkit.BukkitExecutor;
 import me.moros.tasker.executor.SyncExecutor;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionDefault;
 import org.slf4j.Logger;
 
 public class BukkitGaia extends AbstractGaia<GaiaBootstrap> {
@@ -62,10 +67,10 @@ public class BukkitGaia extends AbstractGaia<GaiaBootstrap> {
         u -> ((BukkitGaiaUser) u).handle()
       );
       manager.registerAsynchronousCompletions();
+      initPermissions();
       commander = Commander.create(manager, this);
     } catch (Exception e) {
-      logger().error(e.getMessage(), e);
-      parent.getPluginLoader().disablePlugin(parent);
+      throw new RuntimeException(e);
     }
   }
 
@@ -81,13 +86,19 @@ public class BukkitGaia extends AbstractGaia<GaiaBootstrap> {
     }
   }
 
+  private void initPermissions() {
+    var adminPerms = CommandPermissions.adminOnly().collect(Collectors.toMap(CommandPermission::toString, p -> true));
+    parent.getServer().getPluginManager().addPermission(new Permission(CommandPermissions.VERSION.toString(), PermissionDefault.TRUE));
+    parent.getServer().getPluginManager().addPermission(new Permission("gaia.admin", PermissionDefault.OP, adminPerms));
+  }
+
   @Override
   public String author() {
-    return parent.getDescription().getAuthors().get(0);
+    return parent.getPluginMeta().getAuthors().get(0);
   }
 
   @Override
   public String version() {
-    return parent.getDescription().getVersion();
+    return parent.getPluginMeta().getVersion();
   }
 }

@@ -22,17 +22,17 @@ package me.moros.gaia.common.storage.decoder;
 import java.io.IOException;
 import java.util.function.Function;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import me.moros.gaia.api.chunk.ChunkData;
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.common.platform.GaiaChunkData;
-import me.moros.gaia.common.util.DelegateIterator;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.chunk.Snapshot;
+import me.moros.gaia.common.platform.GaiaSnapshot;
 import net.minecraft.SharedConstants;
+import net.minecraft.world.level.block.state.BlockState;
 import org.enginehub.linbus.tree.LinCompoundTag;
 import org.enginehub.linbus.tree.LinIntTag;
 
-final class DecoderImpl<BlockState> implements Decoder {
+final class DecoderImpl implements Decoder {
   private final int dataVersion;
   private final Function<String, BlockState> mapper;
 
@@ -47,20 +47,20 @@ final class DecoderImpl<BlockState> implements Decoder {
   }
 
   @Override
-  public ChunkData decodeBlocks(ChunkRegion chunk, LinCompoundTag paletteObject, byte[] blocks) throws IOException {
+  public Snapshot decodeBlocks(ChunkRegion chunk, LinCompoundTag paletteObject, byte[] blocks) throws IOException {
     var palette = decodePalette(paletteObject);
-    return new GaiaChunkData<>(chunk, palette, blocks, new DelegateIterator<>(blocks, palette::get));
+    return new GaiaSnapshot(chunk, palette, blocks);
   }
 
   private Int2ObjectMap<BlockState> decodePalette(LinCompoundTag paletteObject) throws IOException {
     var entrySet = paletteObject.value().entrySet();
-    Int2ObjectMap<BlockState> palette = new Int2ObjectOpenHashMap<>(entrySet.size());
+    Int2ObjectMap<BlockState> palette = new Int2ObjectArrayMap<>(entrySet.size());
     for (var palettePart : entrySet) {
-      if (!(palettePart.getValue() instanceof LinIntTag idTag)) {
+      if (palettePart.getValue() instanceof LinIntTag idTag) {
+        palette.put(idTag.valueAsInt(), mapper.apply(palettePart.getKey()));
+      } else {
         throw new IOException("Invalid palette entry: " + palettePart);
       }
-      int id = idTag.valueAsInt();
-      palette.put(id, mapper.apply(palettePart.getKey()));
     }
     return palette;
   }

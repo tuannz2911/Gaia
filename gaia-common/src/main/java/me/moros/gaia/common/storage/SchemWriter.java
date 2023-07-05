@@ -24,10 +24,10 @@ import java.io.Closeable;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
-import me.moros.gaia.api.chunk.ChunkData;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import me.moros.gaia.api.chunk.Snapshot;
 import me.moros.math.Vector3i;
 import org.enginehub.linbus.stream.LinBinaryIO;
 import org.enginehub.linbus.tree.LinCompoundTag;
@@ -44,16 +44,16 @@ public class SchemWriter implements Closeable {
     this.dataVersion = dataVersion;
   }
 
-  public void write(ChunkData data) throws IOException {
-    var rootEntry = new LinRootEntry("", LinCompoundTag.builder().put("Schematic", asTag(data)).build());
+  public void write(Snapshot snapshot) throws IOException {
+    var rootEntry = new LinRootEntry("", LinCompoundTag.builder().put("Schematic", asTag(snapshot)).build());
     LinBinaryIO.write(outputStream, rootEntry);
   }
 
   //https://github.com/SpongePowered/Schematic-Specification/blob/master/versions/schematic-3.md
-  private LinCompoundTag asTag(ChunkData data) {
-    int width = data.width();
-    int height = data.height();
-    int length = data.length();
+  private LinCompoundTag asTag(Snapshot snapshot) {
+    int width = snapshot.width();
+    int height = snapshot.height();
+    int length = snapshot.length();
 
     LinCompoundTag.Builder schematic = LinCompoundTag.builder();
     schematic.putInt("Version", CURRENT_VERSION);
@@ -67,23 +67,22 @@ public class SchemWriter implements Closeable {
     schematic.putShort("Height", (short) height);
     schematic.putShort("Length", (short) length);
     schematic.putIntArray("Offset", Vector3i.ZERO.toIntArray());
-    schematic.put("Blocks", encodeBlocks(data));
+    schematic.put("Blocks", encodeBlocks(snapshot));
     return schematic.build();
   }
 
   private static final class PaletteMap {
-    private final Object2IntMap<String> contents = new Object2IntLinkedOpenHashMap<>();
-    private int nextId = 0;
+    private final Object2IntMap<String> contents;
+    private int nextId;
+
+    private PaletteMap() {
+      this.contents = new Object2IntOpenHashMap<>();
+      this.contents.defaultReturnValue(-1);
+      this.nextId = 0;
+    }
 
     public int getId(String key) {
-      int result = contents.getOrDefault(key, -1);
-      if (result != -1) {
-        return result;
-      }
-      int newValue = nextId;
-      nextId++;
-      contents.put(key, newValue);
-      return newValue;
+      return contents.computeIfAbsent(key, s -> ++nextId);
     }
 
     public LinCompoundTag toNbt() {
@@ -93,16 +92,16 @@ public class SchemWriter implements Closeable {
     }
   }
 
-  private LinCompoundTag encodeBlocks(ChunkData data) {
-    int width = data.width();
-    int height = data.height();
-    int length = data.length();
+  private LinCompoundTag encodeBlocks(Snapshot snapshot) {
+    int width = snapshot.width();
+    int height = snapshot.height();
+    int length = snapshot.length();
     PaletteMap paletteMap = new PaletteMap();
     ByteArrayOutputStream buffer = new ByteArrayOutputStream(width * height * length);
     for (int y = 0; y < height; y++) {
       for (int z = 0; z < length; z++) {
         for (int x = 0; x < width; x++) {
-          String key = data.getStateString(x, y, z);
+          String key = snapshot.getStateString(x, y, z);
           int id = paletteMap.getId(key);
           while ((id & -128) != 0) {
             buffer.write(id & 127 | 128);

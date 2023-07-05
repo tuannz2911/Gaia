@@ -37,7 +37,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class GaiaSelectionService extends AbstractSelectionService implements Listener {
+public final class GaiaSelectionService extends AbstractSelectionService implements Listener {
   public GaiaSelectionService(JavaPlugin plugin) {
     plugin.getServer().getPluginManager().registerEvents(this, plugin);
   }

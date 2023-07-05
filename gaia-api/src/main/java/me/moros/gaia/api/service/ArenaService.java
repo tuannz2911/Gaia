@@ -23,14 +23,14 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import me.moros.gaia.api.arena.Arena;
-import me.moros.gaia.api.util.RevertResult;
+import me.moros.gaia.api.arena.RevertResult;
 
 public interface ArenaService extends Iterable<Arena> {
   boolean contains(String name);
 
   Optional<Arena> arena(String name);
 
-  void add(Arena arena);
+  boolean add(Arena arena);
 
   boolean remove(String name);
 
@@ -40,5 +40,7 @@ public interface ArenaService extends Iterable<Arena> {
 
   RevertResult revert(Arena arena);
 
-  void cancelRevert(Arena arena);
+  default void cancelRevert(Arena arena) {
+    arena.forEach(cr -> cr.reverting(false));
+  }
 }

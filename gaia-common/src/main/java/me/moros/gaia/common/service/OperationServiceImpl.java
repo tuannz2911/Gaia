@@ -24,12 +24,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import me.moros.gaia.api.arena.region.ChunkRegion;
 import me.moros.gaia.api.chunk.ChunkPosition;
 import me.moros.gaia.api.config.ConfigManager;
 import me.moros.gaia.api.operation.GaiaOperation;
 import me.moros.gaia.api.operation.GaiaOperation.Result;
 import me.moros.gaia.api.platform.Level;
-import me.moros.gaia.api.region.ChunkRegion;
 import me.moros.gaia.api.service.OperationService;
 import me.moros.tasker.executor.SyncExecutor;
 

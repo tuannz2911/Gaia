@@ -34,7 +34,7 @@ import me.moros.math.Vector3d;
 final class PointAdapter implements JsonSerializer<Point>, JsonDeserializer<Point> {
   @Override
   public JsonElement serialize(Point src, Type typeOfSrc, JsonSerializationContext context) {
-    JsonArray array = new JsonArray();
+    JsonArray array = new JsonArray(5);
     array.add(src.x());
     array.add(src.y());
     array.add(src.z());

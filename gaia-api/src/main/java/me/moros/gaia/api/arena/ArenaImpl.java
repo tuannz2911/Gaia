@@ -28,8 +28,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.api.region.Region;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.Region;
 import me.moros.gaia.api.util.ComponentUtil;
 import me.moros.gaia.api.util.supplier.Suppliers;
 import net.kyori.adventure.key.Key;

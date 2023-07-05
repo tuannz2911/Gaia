@@ -56,7 +56,6 @@ record VanillaMapper(Logger logger, Map<String, BlockState> cache) implements Fu
       if (reader.canRead()) {
         return arg.blockState();
       }
-      return arg.blockState();
     } catch (CommandSyntaxException ignore) {
     }
     return null;

@@ -25,11 +25,11 @@ import java.util.concurrent.TimeoutException;
 
 import me.moros.gaia.api.Gaia;
 import me.moros.gaia.api.arena.Arena;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.Region;
 import me.moros.gaia.api.locale.Message;
 import me.moros.gaia.api.operation.GaiaOperation;
 import me.moros.gaia.api.platform.Level;
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.api.region.Region;
 import me.moros.gaia.api.service.ArenaService;
 import me.moros.gaia.api.user.GaiaUser;
 import me.moros.gaia.api.util.ChunkUtil;
@@ -93,11 +93,16 @@ public final class UserArenaFactory {
       Message.CREATE_ERROR_CRITICAL.send(user);
       return false;
     }
-    // TODO warn about chunk aligning
     var chunkRegions = ChunkUtil.splitIntoChunks(region);
     if (chunkRegions.isEmpty()) {
       Message.CREATE_FAIL.send(user, arenaName);
       return false;
+    }
+    var size = region.size();
+    int optimalChunkAmount = ChunkUtil.toChunkPos(size.blockX()) * ChunkUtil.toChunkPos(size.blockZ());
+    int optimalHeight = ChunkUtil.toChunkPos(size.blockY());
+    if (chunkRegions.size() > optimalChunkAmount || ChunkUtil.calculateSections(region) % 16 > optimalHeight) {
+      Message.CREATE_WARN_CHUNK_ALIGN.send(user);
     }
     Message.CREATE_ANALYZING.send(user, arenaName);
     createFuture(user, arenaName, level, region, chunkRegions);

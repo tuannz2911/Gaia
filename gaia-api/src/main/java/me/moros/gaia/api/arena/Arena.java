@@ -22,8 +22,8 @@ package me.moros.gaia.api.arena;
 import java.util.List;
 import java.util.stream.Stream;
 
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.api.region.Region;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.Region;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

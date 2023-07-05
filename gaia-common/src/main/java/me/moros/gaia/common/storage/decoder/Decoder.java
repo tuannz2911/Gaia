@@ -20,10 +20,9 @@
 package me.moros.gaia.common.storage.decoder;
 
 import java.io.IOException;
-import java.util.function.Function;
 
-import me.moros.gaia.api.chunk.ChunkData;
-import me.moros.gaia.api.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.chunk.Snapshot;
 import me.moros.math.Vector3i;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.enginehub.linbus.tree.LinCompoundTag;
@@ -44,13 +43,9 @@ public interface Decoder {
 
   int dataVersion();
 
-  ChunkData decodeBlocks(ChunkRegion chunk, LinCompoundTag paletteObject, byte[] blocks) throws IOException;
+  Snapshot decodeBlocks(ChunkRegion chunk, LinCompoundTag paletteObject, byte[] blocks) throws IOException;
 
   static Decoder createVanilla(Logger logger) {
-    return create(new VanillaMapper(logger));
-  }
-
-  static <BlockState> Decoder create(Function<String, BlockState> mapper) {
-    return new DecoderImpl<>(mapper);
+    return new DecoderImpl(new VanillaMapper(logger));
   }
 }

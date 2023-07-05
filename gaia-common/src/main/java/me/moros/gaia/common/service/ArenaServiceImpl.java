@@ -30,11 +30,10 @@ import java.util.stream.Stream;
 
 import me.moros.gaia.api.Gaia;
 import me.moros.gaia.api.arena.Arena;
-import me.moros.gaia.api.arena.Reversible;
+import me.moros.gaia.api.arena.RevertResult;
 import me.moros.gaia.api.operation.GaiaOperation;
 import me.moros.gaia.api.platform.Level;
 import me.moros.gaia.api.service.ArenaService;
-import me.moros.gaia.api.util.RevertResult;
 import me.moros.gaia.common.util.FutureUtil;
 import me.moros.gaia.common.util.ListUtil;
 
@@ -59,8 +58,11 @@ public class ArenaServiceImpl implements ArenaService {
   }
 
   @Override
-  public void add(Arena arena) {
-    arenas.putIfAbsent(arena.name(), arena);
+  public boolean add(Arena arena) {
+    if (stream().filter(a -> a.level().equals(arena.level())).map(Arena::region).anyMatch(arena.region()::intersects)) {
+      return false;
+    }
+    return arenas.putIfAbsent(arena.name(), arena) == null;
   }
 
   @Override
@@ -104,11 +106,10 @@ public class ArenaServiceImpl implements ArenaService {
     arena.chunks().forEach(level::loadChunkWithTicket); // Preload chunks
     var futures = ListUtil.partition(arena.chunks(), 32).stream()
       .map(batch -> plugin.coordinator().storage().loadDataAsync(arena.name(), batch)).toList(); // Load data
-
     var future = FutureUtil.createFailFastBatch(futures) // Create future
       .thenCompose(batches -> {
         var opFutures = batches.stream().flatMap(Collection::stream)
-          .map(data -> GaiaOperation.revert(level, data))
+          .map(data -> GaiaOperation.revert(level, data, 24)) // TODO regulate sectionsPerTick?
           .map(plugin.coordinator().operationService()::add).toList();
         return FutureUtil.createFailFast(opFutures);
       })
@@ -119,14 +120,5 @@ public class ArenaServiceImpl implements ArenaService {
         return completed ? OptionalLong.of(result) : OptionalLong.empty();
       });
     return RevertResult.success(arena, future);
-  }
-
-  @Override
-  public void cancelRevert(Arena arena) {
-    arena.forEach(this::stopReverting);
-  }
-
-  private void stopReverting(Reversible.Mutable reversible) {
-    reversible.reverting(false);
   }
 }

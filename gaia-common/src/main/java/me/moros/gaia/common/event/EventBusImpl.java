@@ -22,12 +22,12 @@ package me.moros.gaia.common.event;
 import java.util.function.Consumer;
 
 import me.moros.gaia.api.arena.Arena;
+import me.moros.gaia.api.arena.region.ChunkRegion;
 import me.moros.gaia.api.event.ArenaAnalyzeEvent;
 import me.moros.gaia.api.event.ArenaRevertEvent;
 import me.moros.gaia.api.event.ChunkRevertEvent;
 import me.moros.gaia.api.event.EventBus;
 import me.moros.gaia.api.event.GaiaEvent;
-import me.moros.gaia.api.region.ChunkRegion;
 import net.kyori.adventure.key.Key;
 
 public class EventBusImpl implements EventBus {

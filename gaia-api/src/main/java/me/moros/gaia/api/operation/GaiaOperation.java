@@ -22,10 +22,10 @@ package me.moros.gaia.api.operation;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-import me.moros.gaia.api.chunk.ChunkData;
+import me.moros.gaia.api.arena.region.ChunkRegion;
 import me.moros.gaia.api.chunk.ChunkPosition;
+import me.moros.gaia.api.chunk.Snapshot;
 import me.moros.gaia.api.platform.Level;
-import me.moros.gaia.api.region.ChunkRegion;
 
 public interface GaiaOperation<T> {
   long startTime();
@@ -43,13 +43,13 @@ public interface GaiaOperation<T> {
   sealed interface Revert extends ChunkOperation<Void> permits RevertOp {
   }
 
-  sealed interface Analyze extends ChunkOperation<ChunkData> permits AnalyzeOp {
+  sealed interface Analyze extends ChunkOperation<Snapshot> permits AnalyzeOp {
   }
 
-  static Revert revert(Level level, ChunkData data) {
+  static Revert revert(Level level, Snapshot snapshot, int sectionsPerTick) {
     Objects.requireNonNull(level);
-    Objects.requireNonNull(data);
-    return new RevertOp(level, data);
+    Objects.requireNonNull(snapshot);
+    return new RevertOp(level, snapshot, sectionsPerTick);
   }
 
   static Analyze snapshotAnalyze(Level level, ChunkRegion chunk) {

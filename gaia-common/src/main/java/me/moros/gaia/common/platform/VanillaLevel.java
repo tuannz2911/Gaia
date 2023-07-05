@@ -22,10 +22,10 @@ package me.moros.gaia.common.platform;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-import me.moros.gaia.api.chunk.ChunkData;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.chunk.Snapshot;
 import me.moros.gaia.api.platform.Level;
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.common.util.DelegateIterator;
+import me.moros.gaia.common.util.IndexedIterator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
@@ -49,31 +49,29 @@ public abstract class VanillaLevel implements Level {
     return handle;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public boolean restoreSnapshot(ChunkData data, int amount) {
+  public boolean restoreSnapshot(Snapshot snapshot, int amount) {
     var chunkSource = chunkSource();
-    var levelChunk = chunkSource.getChunkNow(data.x(), data.z());
-    if (levelChunk != null && amount > 0 && data instanceof GaiaChunkData<?> chunkData) {
-      var offset = chunkData.chunk().region().min();
+    var levelChunk = chunkSource.getChunkNow(snapshot.x(), snapshot.z());
+    if (levelChunk != null && amount > 0 && snapshot instanceof GaiaSnapshot gaiaSnapshot) {
+      var offset = gaiaSnapshot.chunk().region().min();
       final int xOffset = offset.blockX();
       final int yOffset = offset.blockY();
       final int zOffset = offset.blockZ();
-      final DelegateIterator<BlockState> it = (DelegateIterator<BlockState>) chunkData.cachedIterator();
+      final IndexedIterator<BlockState> it = gaiaSnapshot.iterator();
       final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
       int counter = 0;
-      int index;
+      int index = 0;
       BlockState toRestore;
       while (it.hasNext() && ++counter <= amount) {
+        final int y = index / 256;
+        final int z = (index % 256) / 16;
+        final int x = (index % 256) % 16;
         index = it.index();
-        final int y = index >> 8;
-        final int remainder = index - (y << 8);
-        final int z = remainder >> 4;
-        final int x = remainder - (z << 4);
         toRestore = it.next();
-        BlockState result = levelChunk.setBlockState(mutablePos.set(x, yOffset + y, z), toRestore, false);
+        BlockState result = levelChunk.setBlockState(mutablePos.set(xOffset + x, yOffset + y, zOffset + z), toRestore, false);
         if (result != null && result != toRestore) {
-          chunkSource.blockChanged(mutablePos.move(xOffset, 0, zOffset));
+          chunkSource.blockChanged(mutablePos);
         }
       }
       return it.hasNext();
@@ -82,9 +80,9 @@ public abstract class VanillaLevel implements Level {
   }
 
   @Override
-  public ChunkData snapshot(ChunkRegion chunk) {
+  public Snapshot snapshot(ChunkRegion chunk) {
     var levelChunk = Objects.requireNonNull(chunkSource().getChunkNow(chunk.x(), chunk.z()), "Chunk not loaded!");
-    return VanillaChunkData.from(chunk, levelChunk);
+    return VanillaSnapshot.from(chunk, levelChunk);
   }
 
   @Override

@@ -22,10 +22,9 @@ package me.moros.gaia.common.storage;
 import java.io.Closeable;
 import java.io.IOException;
 
-import me.moros.gaia.api.chunk.ChunkData;
-import me.moros.gaia.api.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.chunk.Snapshot;
 import me.moros.gaia.common.storage.decoder.Decoder;
-import me.moros.math.Vector3i;
 import org.enginehub.linbus.stream.LinStream;
 import org.enginehub.linbus.tree.LinCompoundTag;
 import org.enginehub.linbus.tree.LinRootEntry;
@@ -40,7 +39,7 @@ public class SchemReader implements Closeable {
     this.decoder = decoder;
   }
 
-  public ChunkData read(ChunkRegion chunkRegion) throws IOException {
+  public Snapshot read(ChunkRegion chunkRegion) throws IOException {
     LinCompoundTag schematicTag = getBaseTag();
     int schematicVersion = schematicTag.getTag("Version", LinTagType.intTag()).valueAsInt();
     if (schematicVersion != 3) {
@@ -53,16 +52,7 @@ public class SchemReader implements Closeable {
     return LinRootEntry.readFrom(rootStream).value().getTag("Schematic", LinTagType.compoundTag());
   }
 
-  private ChunkData readVersion3(LinCompoundTag schematicTag, ChunkRegion chunkRegion) throws IOException {
-    int width = schematicTag.getTag("Width", LinTagType.shortTag()).valueAsShort() & 0xFFFF;
-    int height = schematicTag.getTag("Height", LinTagType.shortTag()).valueAsShort() & 0xFFFF;
-    int length = schematicTag.getTag("Length", LinTagType.shortTag()).valueAsShort() & 0xFFFF;
-
-    Vector3i size = Vector3i.of(width, height, length);
-    if (!chunkRegion.region().size().equals(size)) {
-      throw new IOException("Size mismatch!" + size);
-    }
-
+  private Snapshot readVersion3(LinCompoundTag schematicTag, ChunkRegion chunkRegion) throws IOException {
     LinCompoundTag blockContainer = schematicTag.getTag("Blocks", LinTagType.compoundTag());
     LinCompoundTag paletteObject = blockContainer.getTag("Palette", LinTagType.compoundTag());
     byte[] blocks = blockContainer.getTag("Data", LinTagType.byteArrayTag()).value();

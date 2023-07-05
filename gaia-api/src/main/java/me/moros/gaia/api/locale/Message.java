@@ -48,7 +48,7 @@ public interface Message {
     .args(text(arena, GOLD)));
   Args1<Component> CREATE_SUCCESS = arena -> brand(translatable("gaia.command.create.success", GREEN)
     .args(arena));
-
+  Args0 CREATE_WARN_CHUNK_ALIGN = () -> brand(translatable("gaia.command.create.warn.chunk-align", YELLOW));
   Args0 PLAYER_REQUIRED = () -> brand(translatable("gaia.command.create.error.player-required", RED));
   Args0 CREATE_ERROR_VALIDATION = () -> brand(translatable("gaia.command.create.error.validation", RED));
   Args1<String> CREATE_ERROR_EXISTS = arena -> brand(translatable("gaia.command.create.error.exists", RED)

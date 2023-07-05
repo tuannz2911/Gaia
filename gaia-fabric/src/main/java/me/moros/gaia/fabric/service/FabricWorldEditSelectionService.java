@@ -28,7 +28,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.players.PlayerList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class FabricWorldEditSelectionService extends WorldEditSelectionService {
+public final class FabricWorldEditSelectionService extends WorldEditSelectionService {
   private final PlayerList playerList;
 
   public FabricWorldEditSelectionService(MinecraftServer server) {

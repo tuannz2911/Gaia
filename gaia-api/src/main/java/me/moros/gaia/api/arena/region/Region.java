@@ -17,9 +17,9 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.api.region;
+package me.moros.gaia.api.arena.region;
 
-import me.moros.gaia.api.util.CoordinateUtil;
+import me.moros.gaia.api.util.ChunkUtil;
 import me.moros.math.Position;
 import me.moros.math.Vector3i;
 
@@ -58,8 +58,8 @@ public sealed interface Region permits RegionImpl {
   }
 
   static Region of(Vector3i min, Vector3i max) {
-    CoordinateUtil.ensureValidPosition(min);
-    CoordinateUtil.ensureValidPosition(max);
+    ChunkUtil.ensureValidPosition(min);
+    ChunkUtil.ensureValidPosition(max);
     return new RegionImpl(min.min(max), min.max(max));
   }
 }

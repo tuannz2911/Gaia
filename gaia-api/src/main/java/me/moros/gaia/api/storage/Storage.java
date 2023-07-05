@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 import me.moros.gaia.api.arena.Arena;
-import me.moros.gaia.api.chunk.ChunkData;
-import me.moros.gaia.api.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.chunk.Snapshot;
 
 public interface Storage {
   boolean arenaFileExists(String name);
@@ -37,7 +37,7 @@ public interface Storage {
 
   CompletableFuture<Arena> saveArena(Arena arena);
 
-  CompletableFuture<Collection<ChunkData>> loadDataAsync(String name, Collection<ChunkRegion.Validated> chunkRegions);
+  CompletableFuture<Collection<Snapshot>> loadDataAsync(String name, Collection<ChunkRegion.Validated> chunkRegions);
 
-  CompletableFuture<Collection<ChunkRegion.Validated>> saveDataAsync(String name, Iterable<ChunkData> chunkData);
+  CompletableFuture<Collection<ChunkRegion.Validated>> saveDataAsync(String name, Iterable<Snapshot> snapshots);
 }

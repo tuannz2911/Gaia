@@ -19,16 +19,16 @@
 
 package me.moros.gaia.common.platform;
 
-import me.moros.gaia.api.chunk.ChunkData;
-import me.moros.gaia.api.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.chunk.Snapshot;
 import me.moros.gaia.api.util.ChunkUtil;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 
-record VanillaChunkData(ChunkRegion chunk, VanillaSection[] sectionData) implements ChunkData {
+record VanillaSnapshot(ChunkRegion chunk, VanillaSection[] sectionData) implements Snapshot {
   @Override
   public String getStateString(int x, int y, int z) {
-    return sectionData[y >> 4].state(x, y, z).toString();
+    return sectionData[ChunkUtil.toChunkPos(y)].state(x, y, z).toString();
   }
 
   @Override
@@ -36,14 +36,14 @@ record VanillaChunkData(ChunkRegion chunk, VanillaSection[] sectionData) impleme
     return sectionData.length;
   }
 
-  static ChunkData from(ChunkRegion chunk, ChunkAccess access) {
-    int size = ChunkUtil.calculateSections(chunk);
+  static Snapshot from(ChunkRegion chunk, ChunkAccess access) {
+    int size = ChunkUtil.calculateSections(chunk.region());
     LevelChunkSection[] cs = access.getSections();
     int sectionIndexOffset = access.getSectionIndex(chunk.region().min().blockY());
     VanillaSection[] sections = new VanillaSection[size];
     for (int i = 0; i < sections.length; i++) {
       sections[i] = VanillaSection.from(cs[sectionIndexOffset + i]);
     }
-    return new VanillaChunkData(chunk, sections);
+    return new VanillaSnapshot(chunk, sections);
   }
 }

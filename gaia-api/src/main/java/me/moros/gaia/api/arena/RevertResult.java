@@ -17,12 +17,11 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.api.util;
+package me.moros.gaia.api.arena;
 
 import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
 
-import me.moros.gaia.api.arena.Arena;
 import me.moros.gaia.api.locale.Message;
 import net.kyori.adventure.text.Component;
 

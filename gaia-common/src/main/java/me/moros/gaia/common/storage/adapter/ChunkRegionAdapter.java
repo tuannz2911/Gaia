@@ -29,8 +29,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.api.region.Region;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.Region;
 import me.moros.math.Vector3i;
 
 final class ChunkRegionAdapter implements JsonSerializer<ChunkRegion.Validated>, JsonDeserializer<ChunkRegion.Validated> {

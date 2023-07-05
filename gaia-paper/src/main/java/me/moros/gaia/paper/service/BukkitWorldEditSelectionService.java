@@ -27,7 +27,7 @@ import net.kyori.adventure.identity.Identity;
 import org.bukkit.Bukkit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class BukkitWorldEditSelectionService extends WorldEditSelectionService {
+public final class BukkitWorldEditSelectionService extends WorldEditSelectionService {
   @Override
   protected @Nullable Player adapt(GaiaUser user) {
     return user.get(Identity.UUID).map(Bukkit::getPlayer).map(BukkitAdapter::adapt).orElse(null);

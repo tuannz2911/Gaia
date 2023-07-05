@@ -22,15 +22,15 @@ package me.moros.gaia.api.platform;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
-import me.moros.gaia.api.chunk.ChunkData;
+import me.moros.gaia.api.arena.region.ChunkRegion;
 import me.moros.gaia.api.chunk.ChunkPosition;
-import me.moros.gaia.api.region.ChunkRegion;
+import me.moros.gaia.api.chunk.Snapshot;
 import net.kyori.adventure.key.Keyed;
 
 public interface Level extends Keyed {
-  boolean restoreSnapshot(ChunkData data, int amount);
+  boolean restoreSnapshot(Snapshot snapshot, int amount);
 
-  ChunkData snapshot(ChunkRegion chunk);
+  Snapshot snapshot(ChunkRegion chunk);
 
   default CompletableFuture<?> loadChunkWithTicket(ChunkPosition pos) {
     return loadChunkWithTicket(pos.x(), pos.z());

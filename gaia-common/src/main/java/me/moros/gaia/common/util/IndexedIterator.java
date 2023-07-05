@@ -22,23 +22,17 @@ package me.moros.gaia.common.util;
 import java.util.Iterator;
 import java.util.function.IntFunction;
 
-public final class DelegateIterator<T> implements Iterator<T> {
-  private final byte[] data;
+public final class IndexedIterator<T> implements Iterator<T> {
   private final IntFunction<T> mapper;
-  private VarIntIterator iterator;
+  private final VarIntIterator iterator;
 
-  public DelegateIterator(byte[] data, IntFunction<T> mapper) {
-    this.data = data;
+  public IndexedIterator(VarIntIterator iterator, IntFunction<T> mapper) {
+    this.iterator = iterator;
     this.mapper = mapper;
-    reset();
   }
 
   public int index() {
     return iterator.index();
-  }
-
-  public void reset() {
-    this.iterator = new VarIntIterator(data);
   }
 
   @Override
@@ -48,6 +42,6 @@ public final class DelegateIterator<T> implements Iterator<T> {
 
   @Override
   public T next() {
-    return mapper.apply(iterator.next());
+    return mapper.apply(iterator.nextInt());
   }
 }

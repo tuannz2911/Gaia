@@ -19,8 +19,8 @@
 
 package me.moros.gaia.common.event;
 
+import me.moros.gaia.api.arena.region.ChunkRegion;
 import me.moros.gaia.api.event.ChunkRevertEvent;
-import me.moros.gaia.api.region.ChunkRegion;
 import net.kyori.adventure.key.Key;
 
 public record ChunkRevertEventImpl(ChunkRegion chunk, Key level, long revertTime) implements ChunkRevertEvent {

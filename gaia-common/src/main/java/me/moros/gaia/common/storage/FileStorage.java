@@ -51,10 +51,9 @@ import com.google.gson.stream.JsonReader;
 import me.moros.gaia.api.Gaia;
 import me.moros.gaia.api.arena.Arena;
 import me.moros.gaia.api.arena.Point;
-import me.moros.gaia.api.chunk.ChunkData;
+import me.moros.gaia.api.arena.region.ChunkRegion;
 import me.moros.gaia.api.chunk.ChunkPosition;
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.api.storage.ChecksumMismatchException;
+import me.moros.gaia.api.chunk.Snapshot;
 import me.moros.gaia.api.storage.Storage;
 import me.moros.gaia.common.storage.adapter.Adapters;
 import me.moros.gaia.common.storage.decoder.Decoder;
@@ -172,7 +171,7 @@ public final class FileStorage implements Storage {
     });
   }
 
-  private ChunkData loadData(String name, ChunkRegion.Validated chunkRegion) throws IOException {
+  private Snapshot loadData(String name, ChunkRegion.Validated chunkRegion) throws IOException {
     var checksum = ALGORITHM.get();
     var path = chunkPath(name, chunkRegion);
     try (var fis = Files.newInputStream(path);
@@ -188,9 +187,9 @@ public final class FileStorage implements Storage {
   }
 
   @Override
-  public CompletableFuture<Collection<ChunkData>> loadDataAsync(String name, Collection<ChunkRegion.Validated> chunkRegions) {
+  public CompletableFuture<Collection<Snapshot>> loadDataAsync(String name, Collection<ChunkRegion.Validated> chunkRegions) {
     return plugin.coordinator().executor().async().submit(() -> {
-      Collection<ChunkData> result = new ArrayList<>();
+      Collection<Snapshot> result = new ArrayList<>();
       try {
         for (var chunkRegion : chunkRegions) {
           result.add(loadData(name, chunkRegion));
@@ -205,21 +204,21 @@ public final class FileStorage implements Storage {
     });
   }
 
-  private long saveData(String name, ChunkData data) throws IOException {
+  private long saveData(String name, Snapshot snapshot) throws IOException {
     var checksum = ALGORITHM.get();
-    try (var fos = Files.newOutputStream(chunkPath(name, ChunkPosition.at(data.x(), data.z())));
+    try (var fos = Files.newOutputStream(chunkPath(name, snapshot));
          var cos = new CheckedOutputStream(fos, checksum);
          var bos = new BufferedOutputStream(cos);
          var gos = new GZIPOutputStream(bos);
          var dos = new DataOutputStream(gos);
          var writer = new SchemWriter(dos, decoder.dataVersion())) {
-      writer.write(data);
+      writer.write(snapshot);
     }
     return checksum.getValue();
   }
 
   @Override
-  public CompletableFuture<Collection<ChunkRegion.Validated>> saveDataAsync(String name, Iterable<ChunkData> data) {
+  public CompletableFuture<Collection<ChunkRegion.Validated>> saveDataAsync(String name, Iterable<Snapshot> data) {
     return plugin.coordinator().executor().async().submit(() -> {
       try {
         Collection<ChunkRegion.Validated> result = new ArrayList<>();

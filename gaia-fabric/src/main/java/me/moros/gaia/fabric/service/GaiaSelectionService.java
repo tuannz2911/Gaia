@@ -41,7 +41,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class GaiaSelectionService extends AbstractSelectionService {
+public final class GaiaSelectionService extends AbstractSelectionService {
   public GaiaSelectionService() {
     AttackBlockCallback.EVENT.register(this::onLeftClickBlock);
     UseBlockCallback.EVENT.register(this::onRightClickBlock);

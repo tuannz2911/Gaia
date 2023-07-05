@@ -25,7 +25,7 @@ import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.entity.Player;
 import com.sk89q.worldedit.regions.CuboidRegion;
-import me.moros.gaia.api.region.Region;
+import me.moros.gaia.api.arena.region.Region;
 import me.moros.gaia.api.service.SelectionService;
 import me.moros.gaia.api.user.GaiaUser;
 import me.moros.math.Vector3i;

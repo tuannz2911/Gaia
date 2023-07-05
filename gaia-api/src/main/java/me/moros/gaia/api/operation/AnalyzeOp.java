@@ -19,11 +19,11 @@
 
 package me.moros.gaia.api.operation;
 
-import me.moros.gaia.api.chunk.ChunkData;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.chunk.Snapshot;
 import me.moros.gaia.api.platform.Level;
-import me.moros.gaia.api.region.ChunkRegion;
 
-final class AnalyzeOp extends AbstractOp.LevelChunkOp<ChunkData> implements GaiaOperation.Analyze {
+final class AnalyzeOp extends AbstractOp.LevelChunkOp<Snapshot> implements GaiaOperation.Analyze {
   private boolean analyzed = false;
 
   AnalyzeOp(Level level, ChunkRegion chunk) {

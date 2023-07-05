@@ -24,9 +24,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.Region;
 import me.moros.gaia.api.chunk.ChunkPosition;
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.api.region.Region;
 import me.moros.gaia.api.util.TextUtil;
 import net.kyori.adventure.key.Key;
 

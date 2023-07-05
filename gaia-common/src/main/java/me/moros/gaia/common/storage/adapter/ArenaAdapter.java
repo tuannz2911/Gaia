@@ -32,8 +32,8 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 import me.moros.gaia.api.arena.Arena;
 import me.moros.gaia.api.arena.Point;
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.api.region.Region;
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.Region;
 import me.moros.math.Vector3i;
 import net.kyori.adventure.key.Key;
 

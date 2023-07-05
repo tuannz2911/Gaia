@@ -23,9 +23,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.arena.region.Region;
 import me.moros.gaia.api.chunk.ChunkPosition;
-import me.moros.gaia.api.region.ChunkRegion;
-import me.moros.gaia.api.region.Region;
+import me.moros.math.Position;
 import me.moros.math.Vector3i;
 
 public final class ChunkUtil {
@@ -35,6 +36,32 @@ public final class ChunkUtil {
   public static final int CHUNK_SIZE = 16;
   public static final int CHUNK_SECTION_SIZE = 16;
   public static final int CHUNK_SECTION_VOLUME = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SECTION_SIZE;
+
+  private static final int WORLD_XZ_MINMAX = 30_000_000;
+  private static final int WORLD_Y_MIN = -2048;
+  private static final int WORLD_Y_MAX = 2047;
+
+  private static boolean isValidXZ(int x, int z) {
+    return -WORLD_XZ_MINMAX <= x && x <= WORLD_XZ_MINMAX && -WORLD_XZ_MINMAX <= z && z <= WORLD_XZ_MINMAX;
+  }
+
+  private static boolean isValidY(int n) {
+    return WORLD_Y_MIN <= n && n <= WORLD_Y_MAX;
+  }
+
+  public static boolean isValidPosition(Position pos) {
+    return isValidXZ(pos.blockX(), pos.blockZ()) && isValidY(pos.blockY());
+  }
+
+  public static void ensureValidPosition(Position pos) throws IllegalArgumentException {
+    if (!isValidPosition(pos)) {
+      throw new IllegalArgumentException(String.format("Position %s exceeds bounds!", pos));
+    }
+  }
+
+  public static int toChunkPos(int value) {
+    return value >> 4;
+  }
 
   public static List<ChunkPosition> spiralChunks(Region region) {
     final int sizeX = calculateChunkDistance(region.max().blockX(), region.min().blockX());
@@ -80,9 +107,9 @@ public final class ChunkUtil {
     final Collection<ChunkRegion> regions = new ArrayList<>(dx * dz);
     int tempX, tempZ;
     Vector3i v1, v2;
-    for (int x = minX >> 4; x <= maxX >> 4; ++x) {
+    for (int x = toChunkPos(minX); x <= toChunkPos(maxX); ++x) {
       tempX = x * CHUNK_SIZE;
-      for (int z = minZ >> 4; z <= maxZ >> 4; ++z) {
+      for (int z = toChunkPos(minZ); z <= toChunkPos(maxZ); ++z) {
         tempZ = z * CHUNK_SIZE;
         v1 = atXZClamped(tempX, minY, tempZ, minX, maxX, minZ, maxZ);
         v2 = atXZClamped(tempX + (CHUNK_SIZE - 1), maxY, tempZ + (CHUNK_SIZE - 1), minX, maxX, minZ, maxZ);
@@ -102,19 +129,15 @@ public final class ChunkUtil {
     }
   }
 
-  public static int calculateSections(ChunkRegion chunk) {
-    int minSectionY = chunk.region().min().blockY() >> 4;
-    int maxSectionY = chunk.region().max().blockY() >> 4;
-    return 1 + (maxSectionY - minSectionY);
+  public static int calculateSections(Region region) {
+    return 1 + (toChunkPos(region.max().blockY()) - toChunkPos(region.min().blockY()));
   }
 
   public static int calculateChunkDistance(int minPos, int maxPos) {
     if (minPos > maxPos) {
       throw new IllegalArgumentException(String.format("Encountered minPos (%d) > maxPos (%d)", minPos, maxPos));
     }
-    int cMin = minPos >> 4;
-    int cMax = maxPos >> 4;
-    return Math.max(1, cMax - cMin);
+    return Math.max(1, toChunkPos(maxPos) - toChunkPos(minPos));
   }
 
   private static Vector3i atXZClamped(int x, int y, int z, int minX, int maxX, int minZ, int maxZ) {

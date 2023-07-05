@@ -16,7 +16,7 @@
   "environment": "server",
   "entrypoints": {
     "server": [
-      "me.moros.gaia.fabric.GaiaFabric"
+      "me.moros.gaia.fabric.GaiaBootstrap"
     ]
   },
   "mixins": [],

@@ -21,8 +21,8 @@ package me.moros.gaia.api.operation;
 
 import java.util.concurrent.CompletableFuture;
 
+import me.moros.gaia.api.arena.region.ChunkRegion;
 import me.moros.gaia.api.platform.Level;
-import me.moros.gaia.api.region.ChunkRegion;
 
 public abstract class AbstractOp<T> implements GaiaOperation<T> {
   protected final long startTime;

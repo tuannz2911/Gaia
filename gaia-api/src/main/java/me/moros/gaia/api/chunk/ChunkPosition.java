@@ -21,6 +21,7 @@ package me.moros.gaia.api.chunk;
 
 import java.util.Comparator;
 
+import me.moros.gaia.api.util.ChunkUtil;
 import me.moros.math.Position;
 
 public interface ChunkPosition {
@@ -31,7 +32,7 @@ public interface ChunkPosition {
   int z();
 
   static ChunkPosition at(Position position) {
-    return at(position.blockX() >> 4, position.blockZ() >> 4);
+    return at(ChunkUtil.toChunkPos(position.blockX()), ChunkUtil.toChunkPos(position.blockZ()));
   }
 
   static ChunkPosition at(int x, int z) {

@@ -63,6 +63,11 @@ public abstract class AbstractOp<T> implements GaiaOperation<T> {
     }
 
     @Override
+    public ChunkRegion chunk() {
+      return chunk;
+    }
+
+    @Override
     public Level level() {
       return level;
     }

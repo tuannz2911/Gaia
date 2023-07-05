@@ -78,10 +78,18 @@ public interface EventBus {
   ArenaRevertEvent postArenaRevertEvent(Arena arena, long time, boolean completed);
 
   /**
+   * Posts a new {@link ChunkAnalyzeEvent}.
+   * @param chunkRegion the chunk that was analyzed
+   * @param level level key
+   * @param time the amount of time it took to analyze the chunk in milliseconds
+   */
+  ChunkAnalyzeEvent postChunkAnalyzeEvent(ChunkRegion chunkRegion, Key level, long time);
+
+  /**
    * Posts a new {@link ChunkRevertEvent}.
    * @param chunkRegion the chunk that was reverted
    * @param level level key
    * @param time the amount of time it took to revert the chunk in milliseconds
    */
-  ChunkRevertEvent postChunkRevertEvent(ChunkRegion.Validated chunkRegion, Key level, long time);
+  ChunkRevertEvent postChunkRevertEvent(ChunkRegion chunkRegion, Key level, long time);
 }

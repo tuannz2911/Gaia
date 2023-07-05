@@ -34,7 +34,6 @@ import me.moros.gaia.api.service.ArenaService;
 import me.moros.gaia.api.user.GaiaUser;
 import me.moros.gaia.api.util.ChunkUtil;
 import me.moros.gaia.api.util.TextUtil;
-import net.kyori.adventure.audience.Audience;
 
 public final class UserArenaFactory {
   private final Gaia plugin;
@@ -53,7 +52,7 @@ public final class UserArenaFactory {
       Message.CREATE_ERROR_VALIDATION.send(user);
       return false;
     }
-    if (plugin.coordinator().arenaService().contains(arenaName)) {
+    if (arenaService.contains(arenaName)) {
       Message.CREATE_ERROR_EXISTS.send(user, arenaName);
       return false;
     }
@@ -105,11 +104,11 @@ public final class UserArenaFactory {
       Message.CREATE_WARN_CHUNK_ALIGN.send(user);
     }
     Message.CREATE_ANALYZING.send(user, arenaName);
-    createFuture(user, arenaName, level, region, chunkRegions);
+    createFuture(arenaName, level, region, chunkRegions);
     return true;
   }
 
-  private void createFuture(Audience user, String arenaName, Level level, Region region, Collection<ChunkRegion> chunkRegions) {
+  private void createFuture(String arenaName, Level level, Region region, Collection<ChunkRegion> chunkRegions) {
     var futures = chunkRegions.stream().map(c -> GaiaOperation.snapshotAnalyze(level, c))
       .map(plugin.coordinator().operationService()::add).toList();
     long startTime = System.currentTimeMillis();
@@ -127,19 +126,19 @@ public final class UserArenaFactory {
         plugin.coordinator().eventBus().postArenaAnalyzeEvent(arena, System.currentTimeMillis() - startTime);
         return plugin.coordinator().storage().saveArena(arena);
       })
-      .whenCompleteAsync((arena, throwable) -> {
+      .whenComplete((arena, throwable) -> {
         if (arena != null) {
-          plugin.coordinator().arenaService().add(arena);
+          arenaService.add(arena);
           Message.CREATE_SUCCESS.send(user, arena.displayName());
-          return;
-        }
-        plugin.coordinator().arenaService().remove(arenaName);
-        if (throwable instanceof TimeoutException) {
-          Message.CREATE_FAIL_TIMEOUT.send(user, arenaName);
         } else {
-          Message.CREATE_FAIL.send(user, arenaName);
-          plugin.logger().warn(throwable.getMessage(), throwable);
+          arenaService.remove(arenaName);
+          if (throwable instanceof TimeoutException) {
+            Message.CREATE_FAIL_TIMEOUT.send(user, arenaName);
+          } else {
+            Message.CREATE_FAIL.send(user, arenaName);
+            plugin.logger().warn(throwable.getMessage(), throwable);
+          }
         }
-      }, plugin.coordinator().executor().async());
+      });
   }
 }

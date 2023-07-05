@@ -59,7 +59,7 @@ public class CoordinatorImpl implements Coordinator {
     this.userService = factory.build(UserService.class);
     this.selectionService = factory.build(SelectionService.class);
     this.levelService = factory.build(LevelService.class);
-    this.operationService = new OperationServiceImpl(plugin.configManager(), executor.sync());
+    this.operationService = new OperationServiceImpl(plugin, executor.sync());
     this.arenaService = new ArenaServiceImpl(plugin);
   }
 

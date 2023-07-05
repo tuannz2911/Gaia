@@ -87,9 +87,13 @@ public abstract class VanillaLevel implements Level {
 
   @Override
   public CompletableFuture<?> loadChunkWithTicket(int x, int z) {
+    return chunkSource().getChunkFuture(x, z, ChunkStatus.EMPTY, false).thenAccept(c -> addChunkTicket(x, z));
+  }
+
+  @Override
+  public void addChunkTicket(int x, int z) {
     var chunkPos = new ChunkPos(x, z);
-    return chunkSource().getChunkFuture(x, z, ChunkStatus.EMPTY, false)
-      .thenAccept(c -> chunkSource().addRegionTicket(GAIA_TICKET_TYPE, chunkPos, 0, Unit.INSTANCE));
+    chunkSource().addRegionTicket(GAIA_TICKET_TYPE, chunkPos, 0, Unit.INSTANCE);
   }
 
   @Override

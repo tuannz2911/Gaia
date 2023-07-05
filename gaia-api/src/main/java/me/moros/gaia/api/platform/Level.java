@@ -38,6 +38,12 @@ public interface Level extends Keyed {
 
   CompletableFuture<?> loadChunkWithTicket(int x, int z);
 
+  default void addChunkTicket(ChunkPosition pos) {
+    addChunkTicket(pos.x(), pos.z());
+  }
+
+  void addChunkTicket(int x, int z);
+
   default void removeChunkTicket(ChunkPosition pos) {
     removeChunkTicket(pos.x(), pos.z());
   }

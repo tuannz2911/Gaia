@@ -17,7 +17,11 @@
  * along with Gaia. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.moros.gaia.api.event;
+package me.moros.gaia.common.event;
 
-public interface ChunkRevertEvent extends ChunkOperationEvent {
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import me.moros.gaia.api.event.ChunkAnalyzeEvent;
+import net.kyori.adventure.key.Key;
+
+public record ChunkAnalyzeEventImpl(ChunkRegion chunk, Key level, long deltaTime) implements ChunkAnalyzeEvent {
 }

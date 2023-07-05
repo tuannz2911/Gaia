@@ -25,6 +25,7 @@ import me.moros.gaia.api.arena.Arena;
 import me.moros.gaia.api.arena.region.ChunkRegion;
 import me.moros.gaia.api.event.ArenaAnalyzeEvent;
 import me.moros.gaia.api.event.ArenaRevertEvent;
+import me.moros.gaia.api.event.ChunkAnalyzeEvent;
 import me.moros.gaia.api.event.ChunkRevertEvent;
 import me.moros.gaia.api.event.EventBus;
 import me.moros.gaia.api.event.GaiaEvent;
@@ -75,7 +76,12 @@ public class EventBusImpl implements EventBus {
   }
 
   @Override
-  public ChunkRevertEvent postChunkRevertEvent(ChunkRegion.Validated chunk, Key level, long time) {
+  public ChunkAnalyzeEvent postChunkAnalyzeEvent(ChunkRegion chunk, Key level, long time) {
+    return postAndReturn(new ChunkAnalyzeEventImpl(chunk, level, time));
+  }
+
+  @Override
+  public ChunkRevertEvent postChunkRevertEvent(ChunkRegion chunk, Key level, long time) {
     return postAndReturn(new ChunkRevertEventImpl(chunk, level, time));
   }
 }

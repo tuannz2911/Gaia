@@ -19,5 +19,13 @@
 
 package me.moros.gaia.api.event;
 
-public interface ChunkRevertEvent extends ChunkOperationEvent {
+import me.moros.gaia.api.arena.region.ChunkRegion;
+import net.kyori.adventure.key.Key;
+
+public interface ChunkOperationEvent extends GaiaEvent {
+  ChunkRegion chunk();
+
+  Key level();
+
+  long deltaTime();
 }

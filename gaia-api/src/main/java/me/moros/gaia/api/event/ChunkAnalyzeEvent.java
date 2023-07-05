@@ -19,5 +19,5 @@
 
 package me.moros.gaia.api.event;
 
-public interface ChunkRevertEvent extends ChunkOperationEvent {
+public interface ChunkAnalyzeEvent extends ChunkOperationEvent {
 }

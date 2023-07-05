@@ -37,6 +37,8 @@ public interface GaiaOperation<T> {
   enum Result {CONTINUE, WAIT, REMOVE}
 
   interface ChunkOperation<T> extends GaiaOperation<T>, ChunkPosition {
+    ChunkRegion chunk();
+
     Level level();
   }
 

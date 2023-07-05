@@ -103,7 +103,7 @@ public class ArenaServiceImpl implements ArenaService {
     arena.resetLastReverted();
     long startTime = System.currentTimeMillis();
 
-    arena.chunks().forEach(level::loadChunkWithTicket); // Preload chunks
+    arena.chunks().forEach(level::addChunkTicket); // Preload chunks
     var futures = ListUtil.partition(arena.chunks(), 32).stream()
       .map(batch -> plugin.coordinator().storage().loadDataAsync(arena.name(), batch)).toList(); // Load data
     var future = FutureUtil.createFailFastBatch(futures) // Create future

@@ -9,7 +9,13 @@ pluginManagement {
 
 rootProject.name = "gaia"
 
-include("gaia-api")
-include("gaia-common")
-include("gaia-paper")
-include("gaia-fabric")
+setupSubproject("api")
+setupSubproject("common")
+setupSubproject("paper")
+setupSubproject("fabric")
+
+fun setupSubproject(moduleName: String) {
+    val name = "gaia-$moduleName"
+    include(name)
+    project(":$name").projectDir = file(moduleName)
+}

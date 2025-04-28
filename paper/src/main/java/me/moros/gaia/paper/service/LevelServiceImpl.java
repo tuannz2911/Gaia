@@ -36,7 +36,7 @@ public record LevelServiceImpl(RegionExecutor executor, Logger logger) implement
     if (world == null) {
       world = Bukkit.getWorld(level.value());
     } 
-    if (world == null {
+    if (world == null) {
       logger().warn("Couldn't find level with key " + level);
       return null;
     }

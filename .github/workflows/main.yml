@@ -35,4 +35,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
            name: Plugin
-           path: "*"
+           path: "paper/build/libs/*"

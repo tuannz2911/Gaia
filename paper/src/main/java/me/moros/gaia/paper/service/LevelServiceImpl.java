@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 public record LevelServiceImpl(RegionExecutor executor, Logger logger) implements LevelService {
   @Override
   public @Nullable Level findLevel(Key level) {
-    var world = Bukkit.getServer().getWorld(level);
+    var world = Bukkit.getWorld(level.value);
     if (world == null) {
       logger().warn("Couldn't find level with key " + level);
       return null;
